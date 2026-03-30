@@ -197,7 +197,7 @@
                     class="form-control"
                     value="{{ old('email') }}"
                     required 
-                    placeholder="admin@aquaheart.com"
+                    placeholder="email"
                 >
             </div>
 
