@@ -636,21 +636,18 @@
                 <form method="POST" action="{{ route('login') }}" class="login-form">
                     @csrf
 
-                    <div class="field">
-                        <label for="email">Email address</label>
-                        <div class="input-shell">
-                            <i data-lucide="mail" size="18"></i>
-                            <input
-                                type="email"
-                                id="email"
-                                name="email"
-                                class="form-control"
-                                value="{{ old('email') }}"
-                                required
-                                autofocus
-                                placeholder="name@aquaheart.com">
-                        </div>
-                    </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-control"
+                    value="{{ old('email') }}"
+                    required 
+                    placeholder="admin@aquaheart.com"
+                >
+            </div>
 
                     <div class="field">
                         <label for="password">Password</label>
