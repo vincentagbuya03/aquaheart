@@ -40,14 +40,50 @@
                 </div>
 
                 <div class="form-group full">
-                    <label class="field-label">Detailed Service Address</label>
+                    <label class="field-label">Street Address</label>
                     <textarea 
-                        name="address" 
-                        class="form-input @error('address') is-invalid @enderror"
-                        placeholder="House No, Street, Barangay, City..."
+                        name="street" 
+                        class="form-input @error('street') is-invalid @enderror"
+                        placeholder="House No, Street, Barangay..."
                         rows="4"
-                    >{{ old('address', $customer->address ?? '') }}</textarea>
-                    @error('address') <span class="error-msg">{{ $message }}</span> @enderror
+                    >{{ old('street', $customer->street ?? '') }}</textarea>
+                    @error('street') <span class="error-msg">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="form-group full">
+                    <label class="field-label">City</label>
+                    <input 
+                        type="text" 
+                        name="city" 
+                        class="form-input @error('city') is-invalid @enderror"
+                        value="{{ old('city', $customer->city ?? '') }}"
+                        placeholder="City or municipality"
+                    >
+                    @error('city') <span class="error-msg">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="form-group full">
+                    <label class="field-label">Province</label>
+                    <input 
+                        type="text" 
+                        name="province" 
+                        class="form-input @error('province') is-invalid @enderror"
+                        value="{{ old('province', $customer->province ?? '') }}"
+                        placeholder="Province or region"
+                    >
+                    @error('province') <span class="error-msg">{{ $message }}</span> @enderror
+                </div>
+
+                <div class="form-group full">
+                    <label class="field-label">ZIP Code</label>
+                    <input 
+                        type="text" 
+                        name="zip_code" 
+                        class="form-input @error('zip_code') is-invalid @enderror"
+                        value="{{ old('zip_code', $customer->zip_code ?? '') }}"
+                        placeholder="Postal code"
+                    >
+                    @error('zip_code') <span class="error-msg">{{ $message }}</span> @enderror
                 </div>
             </div>
 

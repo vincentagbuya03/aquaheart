@@ -58,11 +58,11 @@
         </div>
         <div class="metric-item">
             <span>Avg. Transaction</span>
-            <div>PHP {{ number_format($refills->count() > 0 ? $refills->sum('amount') / $refills->count() : 0, 2) }}</div>
+            <div>PHP {{ number_format($refills->count() > 0 ? $refills->sum(fn($refill) => ($refill->quantity ?? 0) * ($refill->unit_price ?? 0)) / $refills->count() : 0, 2) }}</div>
         </div>
         <div class="metric-item">
             <span>Record Period</span>
-            <div>{{ $refills->min('refill_date') ? $refills->min('refill_date')->format('M d') : 'N/A' }} - {{ $refills->max('refill_date') ? $refills->max('refill_date')->format('M d') : 'N/A' }}</div>
+            <div>{{ $refills->min('created_at') ? $refills->min('created_at')->format('M d') : 'N/A' }} - {{ $refills->max('created_at') ? $refills->max('created_at')->format('M d') : 'N/A' }}</div>
         </div>
     </div>
 
@@ -81,11 +81,11 @@
             @foreach($refills as $refill)
                 <tr>
                     <td class="ref-cell">{{ $refill->receipt_number ?: 'Pending Number' }}</td>
-                    <td>{{ $refill->refill_date ? $refill->refill_date->format('M d, Y') : ($refill->created_at ? $refill->created_at->format('M d, Y') : 'N/A') }}</td>
+                    <td>{{ optional($refill->created_at)->format('M d, Y') ?? 'N/A' }}</td>
                     <td>{{ $refill->customer->name ?? 'N/A' }}</td>
                     <td>{{ $refill->product->name ?? 'Standard' }}</td>
-                    <td>{{ ucfirst($refill->payment_status ?? 'paid') }}</td>
-                    <td class="amt-cell">PHP {{ number_format($refill->amount, 2) }}</td>
+                    <td>{{ ucfirst(str_replace('_', ' ', $refill->payment_status_label ?? 'paid')) }}</td>
+                    <td class="amt-cell">PHP {{ number_format(($refill->quantity ?? 0) * ($refill->unit_price ?? 0), 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -93,7 +93,7 @@
 
     <div class="summary-total">
         <span>Accumulated Gross Total</span>
-        <div>PHP {{ number_format($refills->sum('amount'), 2) }}</div>
+        <div>PHP {{ number_format($refills->sum(fn($refill) => ($refill->quantity ?? 0) * ($refill->unit_price ?? 0)), 2) }}</div>
     </div>
 
     <footer class="report-footer">

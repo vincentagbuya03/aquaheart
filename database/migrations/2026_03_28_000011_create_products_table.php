@@ -9,7 +9,7 @@ class CreateProductsTable extends Migration
     public function up()
     {
         Schema::create('products', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('name');
             $table->decimal('price', 10, 2)->default(0);
             $table->text('description')->nullable();

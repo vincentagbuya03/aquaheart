@@ -22,6 +22,16 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            
+            $user = Auth::user();
+            if ($user->is_admin) {
+                return redirect()->intended(route('aquaheart.dashboard'));
+            } elseif ($user->is_cashier) {
+                return redirect()->intended(route('aquaheart.cashier.dashboard'));
+            }else{
+                return redirect()->intended(route('home'));
+            }
+            
             return redirect()->intended(route('aquaheart.dashboard'));
         }
 
@@ -35,6 +45,6 @@ class LoginController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/');
+        return redirect()->route('login');
     }
 }

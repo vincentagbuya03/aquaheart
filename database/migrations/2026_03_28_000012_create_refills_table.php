@@ -9,9 +9,11 @@ class CreateRefillsTable extends Migration
     public function up()
     {
         Schema::create('refills', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->uuid('customer_id');
+            $table->uuid('product_id');
+            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
             $table->integer('quantity')->default(1);
             $table->timestamp('refilled_at')->nullable();
             $table->text('note')->nullable();

@@ -13,6 +13,12 @@
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <!-- DotLottie Player (Required for .lottie files) -->
+    <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
+    
+    <!-- Lottie FilesFallback for JSON -->
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    
     @stack('scripts_header')
 
     <style>
@@ -60,29 +66,37 @@
         }
 
         .sidebar-brand {
-            padding: 32px 24px;
+            padding: 24px;
             display: flex;
             align-items: center;
             gap: 12px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
         }
 
-        .brand-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--primary);
-            color: white;
+        .brand-logo-img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
         }
 
         .brand-name {
             font-weight: 800;
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             letter-spacing: -0.5px;
             color: var(--primary);
-            text-transform: none; /* Removed OA uppercase */
+            line-height: 1.2;
+        }
+
+        .brand-name span {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .nav-section {
@@ -92,12 +106,12 @@
 
         .nav-label {
             padding: 0 16px;
-            font-size: 0.7rem;
-            font-weight: 700;
+            font-size: 0.65rem;
+            font-weight: 800;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
+            letter-spacing: 1.2px;
+            margin: 20px 0 10px;
         }
 
         .nav-list {
@@ -130,15 +144,28 @@
         }
 
         .nav-link i {
-            width: 18px;
-            height: 18px;
-            opacity: 0.8;
+            width: 20px;
+            height: 20px;
+            stroke-width: 2.5;
+            opacity: 0.9;
         }
 
         .sidebar-footer {
             margin-top: auto;
-            padding: 20px;
+            padding: 24px 16px;
             border-top: 1px solid var(--border);
+            background: #fafafa;
+        }
+
+        .nav-link-logout {
+            color: #dc2626 !important;
+            border: 1px solid #fee2e2 !important;
+            background: #fff5f5;
+        }
+
+        .nav-link-logout:hover {
+            background: #fee2e2 !important;
+            color: #b91c1c !important;
         }
 
         /* --- Main Layout --- */
@@ -169,8 +196,17 @@
             gap: 12px;
             background: #f1f5f9;
             padding: 8px 16px;
-            border-radius: 200px;
-            width: 350px;
+            border-radius: 12px;
+            width: 400px;
+            border: 1px solid transparent;
+            transition: var(--transition);
+        }
+
+        .search:focus-within {
+            background: #ffffff;
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+            width: 420px;
         }
 
         .search input {
@@ -198,6 +234,10 @@
             color: var(--accent);
             font-weight: 700;
             font-size: 0.85rem;
+        }
+
+        .topbar-right i {
+            stroke-width: 2.5;
         }
 
         .content {
@@ -247,6 +287,10 @@
             opacity: 0.9;
         }
 
+        .btn-primary i, .btn-premium i, .btn-done i {
+            stroke-width: 2.5;
+        }
+
         .card {
             background: #ffffff;
             border: 1px solid var(--border);
@@ -261,6 +305,8 @@
             width: 100%;
             text-align: left;
             cursor: pointer;
+            padding: 0;
+            display: block;
         }
 
         .modal-overlay {
@@ -333,6 +379,102 @@
             transform: translateY(-1px);
         }
 
+        /* --- Success Modal --- */
+        .success-modal-card {
+            width: min(400px, 100%);
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 40px 32px;
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.8) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* --- Success Modal Variants --- */
+        .success-modal-card.style-delete {
+            border-top: 5px solid #dc2626;
+        }
+        .success-modal-card.style-update {
+            border-top: 5px solid #3b82f6;
+        }
+        .success-modal-card.style-create {
+            border-top: 5px solid #10b981;
+        }
+
+        .lottie-container {
+            width: 130px;
+            height: 130px;
+            margin: 0 auto 16px;
+        }
+
+        .success-modal-card h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .success-modal-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .btn-done {
+            background: var(--accent);
+            color: white;
+            padding: 12px 32px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            transition: var(--transition);
+        }
+
+        .btn-done:hover {
+            background: #2563eb;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+        }
+
+        .ajax-toast {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            min-width: 260px;
+            max-width: 380px;
+            background: #0f172a;
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 12px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.28);
+            z-index: 2500;
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .ajax-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .ajax-toast.error {
+            background: #7f1d1d;
+        }
+
         @media (max-width: 1024px) {
             .sidebar { width: 80px; }
             .brand-name, .nav-link span, .nav-label, .sidebar-footer { display: none; }
@@ -346,20 +488,33 @@
 <body>
 
     <aside class="sidebar">
-        <div class="sidebar-brand">
-            <div class="brand-icon">
-                <i data-lucide="droplet"></i>
+        <a href="{{ auth()->user()->is_admin ? route('aquaheart.dashboard') : route('aquaheart.cashier.dashboard') }}" class="sidebar-brand" style="text-decoration: none; display: flex; transition: var(--transition);">
+            <img src="{{ asset('logo.png') }}" alt="Aqua Heart Logo" class="brand-logo-img">
+            <div class="brand-name">
+                Aqua Heart
+                <span>{{ auth()->user()->is_admin ? 'Admin Panel' : 'Cashier Portal' }}</span>
             </div>
-            <div class="brand-name">AquaHeart Admin</div>
-        </div>
+        </a>
 
-        <div class="nav-section">
-            <div class="nav-label">Main Menu</div>
+        <div class="nav-section" style="flex: 1; overflow-y: auto; padding-bottom: 20px;">
+            <div class="nav-label">General</div>
             <ul class="nav-list">
                 <li class="nav-item">
-                    <a href="{{ route('aquaheart.dashboard') }}" class="nav-link {{ request()->routeIs('aquaheart.dashboard') ? 'active' : '' }}">
-                        <i data-lucide="grid"></i>
+                    <a href="{{ auth()->user()->is_admin ? route('aquaheart.dashboard') : route('aquaheart.cashier.dashboard') }}" class="nav-link {{ request()->routeIs('aquaheart.dashboard') || request()->routeIs('aquaheart.cashier.dashboard') ? 'active' : '' }}">
+                        <i data-lucide="layout-dashboard"></i>
                         <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('aquaheart.reports.sales') }}" class="nav-link {{ request()->routeIs('aquaheart.reports.sales') ? 'active' : '' }}">
+                        <i data-lucide="bar-chart-3"></i>
+                        <span>Sales Monitor</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('aquaheart.products.index') }}" class="nav-link {{ request()->routeIs('aquaheart.products.*') ? 'active' : '' }}">
+                        <i data-lucide="boxes"></i>
+                        <span>Inventory</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -369,63 +524,89 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('aquaheart.products.index') }}" class="nav-link {{ request()->routeIs('aquaheart.products.*') ? 'active' : '' }}">
-                        <i data-lucide="package-2"></i>
-                        <span>Products</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('aquaheart.refills.index') }}" class="nav-link {{ request()->routeIs('aquaheart.refills.*') ? 'active' : '' }}">
-                        <i data-lucide="columns"></i>
-                        <span>Refill Logs</span>
+                    <a href="{{ route('aquaheart.refills.index') }}" class="nav-link {{ request()->routeIs('aquaheart.refills.index') ? 'active' : '' }}">
+                        <i data-lucide="receipt"></i>
+                        <span>Transaction Logs</span>
                     </a>
                 </li>
             </ul>
 
-            <div class="nav-label">Analysis</div>
-            <ul class="nav-list">
-                <li class="nav-item">
-                    <a href="{{ route('aquaheart.reports.sales') }}" class="nav-link {{ request()->routeIs('aquaheart.reports.*') ? 'active' : '' }}">
-                        <i data-lucide="pie-chart"></i>
-                        <span>Reports</span>
-                    </a>
-                </li>
-            </ul>
-
-            <div class="nav-label">Support</div>
-            <ul class="nav-list">
-                <li class="nav-item">
-                    <a href="{{ route('aquaheart.reports.customers') }}" class="nav-link {{ request()->routeIs('aquaheart.reports.customers') ? 'active' : '' }}">
-                        <i data-lucide="settings"></i>
-                        <span>Customer Stats</span>
-                    </a>
-                </li>
-            </ul>
+            @if(auth()->user()->is_admin)
+                <div class="nav-label">Management</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{{ route('aquaheart.users.index') }}" class="nav-link {{ request()->routeIs('aquaheart.users.*') ? 'active' : '' }}">
+                            <i data-lucide="shield-check"></i>
+                            <span>Team Management</span>
+                        </a>
+                    </li>
+                </ul>
+            @endif
         </div>
 
         <div class="sidebar-footer">
-            <form method="POST" action="{{ route('logout') }}" id="logoutForm">
-                @csrf
-                <button type="button" class="logout-trigger" data-logout-open>
-                    <div class="nav-link" style="color: #ef4444; border: 1px solid #fee2e2;">
-                        <i data-lucide="log-out"></i>
-                        <span>Sign Out</span>
-                    </div>
-                </button>
-            </form>
+            <div style="margin-bottom: 20px;">
+                <a href="{{ route('aquaheart.refills.create') }}" class="btn-primary" style="width: 100%; justify-content: center; height: 44px; font-weight: 700; border-radius: 12px; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);">
+                    <i data-lucide="plus-circle" size="18"></i>
+                    New Transaction
+                </a>
+            </div>
+
+            <ul class="nav-list" style="margin-bottom: 0;">
+                <li class="nav-item">
+                    <a href="{{ route('aquaheart.cashier.settings.index') }}" class="nav-link {{ request()->routeIs('aquaheart.cashier.settings.*') ? 'active' : '' }}">
+                        <i data-lucide="settings"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i data-lucide="help-circle"></i>
+                        <span>Support</span>
+                    </a>
+                </li>
+                <li class="nav-item" style="margin-top: 8px;">
+                    <form method="POST" action="{{ route('logout') }}" id="logoutForm">
+                        @csrf
+                        <button type="button" class="logout-trigger" data-logout-open>
+                            <div class="nav-link nav-link-logout" style="justify-content: center;">
+                                <i data-lucide="log-out"></i>
+                                <span>Sign Out</span>
+                            </div>
+                        </button>
+                    </form>
+                </li>
+            </ul>
         </div>
     </aside>
 
     <main class="main">
         <div class="topbar">
-            <div class="search">
+            <form action="{{ route('aquaheart.products.index') }}" method="GET" class="search">
                 <i data-lucide="search" size="16" style="color: #94a3b8;"></i>
-                <input type="text" placeholder="Search data...">
-            </div>
-            <div class="topbar-right">
-                <div class="user-pill">
-                    <i data-lucide="shield" size="14"></i>
-                    <span>{{ auth()->user()->name ?? 'Administrator' }}</span>
+                <input type="text" name="search" placeholder="Search inventory items..." value="{{ request('search') }}">
+            </form>
+            <div class="topbar-right" style="display: flex; align-items: center; gap: 24px;">
+                <a href="#" style="display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 0.85rem;">
+                    <i data-lucide="help-circle" size="18"></i> Help
+                </a>
+                <a href="#" class="btn-primary" style="padding: 8px 16px; gap: 8px; display: flex; align-items: center;">
+                    <i data-lucide="zap" size="16" style="stroke-width: 2.5;"></i> Quick Action
+                </a>
+                
+                <div style="width: 1px; height: 24px; background: var(--border);"></div>
+                
+                <button style="background: none; border: none; cursor: pointer; color: var(--text-muted); position: relative;">
+                    <i data-lucide="bell" size="20"></i>
+                    <span style="position: absolute; top: 0; right: 0; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 2px solid white;"></span>
+                </button>
+                
+                <div style="display: flex; align-items: center; gap: 12px; margin-left: 8px;">
+                    <div style="text-align: right; display: flex; flex-direction: column;">
+                        <span style="font-weight: 800; font-size: 0.85rem; color: var(--primary);">{{ auth()->user()->name ?? 'Admin' }}</span>
+                        <span style="font-size: 0.65rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">{{ auth()->user()->is_admin ? 'Manager' : 'Cashier' }}</span>
+                    </div>
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'Admin') }}&background=e0f2fe&color=0369a1" alt="Profile" style="width: 36px; height: 36px; border-radius: 10px; object-fit: cover;">
                 </div>
             </div>
         </div>
@@ -446,15 +627,92 @@
     </main>
 
     <div class="modal-overlay" id="logoutModal" aria-hidden="true">
-        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
-            <h3 id="logoutModalTitle">Confirm logout</h3>
-            <p>You are about to sign out of the AquaHeart admin panel. Do you want to continue?</p>
-            <div class="modal-actions">
-                <button type="button" class="btn-secondary" data-logout-cancel>Cancel</button>
-                <button type="button" class="btn-danger" data-logout-confirm>Log out</button>
+        <div class="modal-card" style="text-align: center; padding: 40px 32px; border-radius: 24px;" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
+            <div style="width: 130px; height: 130px; margin: 0 auto 10px;">
+                <dotlottie-player 
+                    src="{{ asset('lottie/Warning animation.lottie') }}" 
+                    background="transparent" 
+                    speed="1" 
+                    style="width: 130px; height: 130px;" 
+                    loop 
+                    autoplay>
+                </dotlottie-player>
+            </div>
+            <h3 id="logoutModalTitle" style="font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 12px;">Confirm Logout</h3>
+            <p style="color: var(--text-muted); margin-bottom: 32px;">You are about to sign out of the AquaHeart {{ auth()->user()->is_admin ? 'admin' : 'cashier' }} panel. Do you want to continue?</p>
+            <div class="modal-actions" style="display: flex; gap: 12px; justify-content: center;">
+                <button type="button" class="btn-secondary" style="padding: 12px 24px; border-radius: 12px; font-weight: 700; border: 1px solid var(--border); background: white;" data-logout-cancel>Cancel</button>
+                <button type="button" class="btn-danger" style="padding: 12px 24px; border-radius: 12px; font-weight: 700; background: #dc2626; color: white; border: none;" data-logout-confirm>Log out</button>
             </div>
         </div>
     </div>
+
+    <div class="modal-overlay" id="deleteModal" aria-hidden="true">
+        <div class="modal-card" style="text-align: center; padding: 40px 32px; border-radius: 24px;" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+            <div style="width: 130px; height: 130px; margin: 0 auto 10px;">
+                <dotlottie-player
+                    src="{{ asset('lottie/Warning animation.lottie') }}"
+                    background="transparent"
+                    speed="1"
+                    style="width: 130px; height: 130px;"
+                    loop
+                    autoplay>
+                </dotlottie-player>
+            </div>
+            <h3 id="deleteModalTitle" style="font-size: 1.4rem; font-weight: 800; color: var(--primary); margin-bottom: 12px;">Confirm Delete</h3>
+            <p id="deleteModalMessage" style="color: var(--text-muted); margin-bottom: 32px;">Are you sure you want to delete this record?</p>
+            <div class="modal-actions" style="display: flex; gap: 12px; justify-content: center;">
+                <button type="button" class="btn-secondary" style="padding: 12px 24px; border-radius: 12px; font-weight: 700; border: 1px solid var(--border); background: white;" data-delete-cancel>Cancel</button>
+                <button type="button" class="btn-danger" style="padding: 12px 24px; border-radius: 12px; font-weight: 700; background: #dc2626; color: white; border: none;" data-delete-confirm>Delete</button>
+            </div>
+        </div>
+    </div>
+
+    @if(session('success'))
+    @php
+        $msg = strtolower(session('success'));
+        $type = 'create';
+        $lottie = asset('lottie/success.lottie'); 
+        $title = 'Success!';
+        
+        if (str_contains($msg, 'update') || str_contains($msg, 'edit')) {
+            $type = 'update';
+        $lottie = asset('lottie/success.lottie'); 
+            $title = 'Updated!';
+        } elseif (str_contains($msg, 'delete') || str_contains($msg, 'remove')) {
+            $type = 'delete';
+            $lottie = asset('lottie/Delete Icon.lottie'); 
+            $title = 'Deleted!';
+        }
+    @endphp
+    <div class="modal-overlay show" id="successModal">
+        <div class="success-modal-card style-{{ $type }}">
+            <div class="lottie-container">
+                <dotlottie-player 
+                    src="{{ $lottie }}" 
+                    background="transparent" 
+                    speed="1" 
+                    style="width: 130px; height: 130px; margin: 0 auto;" 
+                    autoplay>
+                </dotlottie-player>
+            </div>
+            <h2 style="margin-top: 5px;">{{ $title }}</h2>
+            <p>{{ session('success') }}</p>
+            <button type="button" class="btn-done" style="background: {{ $type == 'delete' ? '#dc2626' : ($type == 'update' ? '#3b82f6' : '#10b981') }};" onclick="document.getElementById('successModal').classList.remove('show')">
+                Got it
+            </button>
+        </div>
+    </div>
+    @endif
+
+    <script>
+        // Check if lottie-player is defined, if not, try a fallback or log
+        window.addEventListener('load', () => {
+            if (!customElements.get('lottie-player')) {
+                console.error('Lottie Player failed to load. Check your internet connection or script source.');
+            }
+        });
+    </script>
 
     <script>
         lucide.createIcons();
@@ -464,6 +722,12 @@
         const logoutOpenButtons = document.querySelectorAll('[data-logout-open]');
         const logoutCancelButton = document.querySelector('[data-logout-cancel]');
         const logoutConfirmButton = document.querySelector('[data-logout-confirm]');
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteModalMessage = document.getElementById('deleteModalMessage');
+        const deleteCancelButton = document.querySelector('[data-delete-cancel]');
+        const deleteConfirmButton = document.querySelector('[data-delete-confirm]');
+
+        let deleteResolve = null;
 
         function openLogoutModal() {
             logoutModal.classList.add('show');
@@ -475,12 +739,42 @@
             logoutModal.setAttribute('aria-hidden', 'true');
         }
 
+        function openDeleteModal(message) {
+            deleteModalMessage.textContent = message || 'Are you sure you want to delete this record?';
+            deleteModal.classList.add('show');
+            deleteModal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeDeleteModal() {
+            deleteModal.classList.remove('show');
+            deleteModal.setAttribute('aria-hidden', 'true');
+        }
+
+        function askDeleteConfirmation(message) {
+            openDeleteModal(message);
+
+            return new Promise((resolve) => {
+                deleteResolve = resolve;
+            });
+        }
+
+        function resolveDeleteModal(confirmed) {
+            if (typeof deleteResolve === 'function') {
+                deleteResolve(confirmed);
+                deleteResolve = null;
+            }
+
+            closeDeleteModal();
+        }
+
         logoutOpenButtons.forEach((button) => {
             button.addEventListener('click', openLogoutModal);
         });
 
         logoutCancelButton?.addEventListener('click', closeLogoutModal);
         logoutConfirmButton?.addEventListener('click', () => logoutForm.submit());
+        deleteCancelButton?.addEventListener('click', () => resolveDeleteModal(false));
+        deleteConfirmButton?.addEventListener('click', () => resolveDeleteModal(true));
 
         logoutModal?.addEventListener('click', (event) => {
             if (event.target === logoutModal) {
@@ -488,11 +782,126 @@
             }
         });
 
+        deleteModal?.addEventListener('click', (event) => {
+            if (event.target === deleteModal) {
+                resolveDeleteModal(false);
+            }
+        });
+
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && logoutModal.classList.contains('show')) {
                 closeLogoutModal();
             }
+
+            if (event.key === 'Escape' && deleteModal.classList.contains('show')) {
+                resolveDeleteModal(false);
+            }
         });
+
+        (function () {
+            let toastTimeout;
+
+            function isDeleteForm(form) {
+                const methodInput = form.querySelector('input[name="_method"]');
+                return !!methodInput && String(methodInput.value || '').toUpperCase() === 'DELETE';
+            }
+
+            function showAjaxToast(message, isError) {
+                let toast = document.getElementById('ajaxToast');
+
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'ajaxToast';
+                    toast.className = 'ajax-toast';
+                    document.body.appendChild(toast);
+                }
+
+                toast.textContent = message;
+                toast.classList.toggle('error', !!isError);
+                toast.classList.add('show');
+
+                window.clearTimeout(toastTimeout);
+                toastTimeout = window.setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2400);
+            }
+
+            document.addEventListener('submit', async (event) => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement)) {
+                    return;
+                }
+
+                if (!isDeleteForm(form)) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                if (form.dataset.deleteConfirmed === '1') {
+                    delete form.dataset.deleteConfirmed;
+                    return;
+                }
+
+                const deleteLabel = form.getAttribute('data-delete-label') || '';
+                const message = form.getAttribute('data-confirm') || (deleteLabel ? `Delete ${deleteLabel}?` : 'Delete this record?');
+                const confirmed = await askDeleteConfirmation(message);
+
+                if (!confirmed) {
+                    return;
+                }
+
+                if (!form.hasAttribute('data-ajax-delete')) {
+                    form.dataset.deleteConfirmed = '1';
+                    form.submit();
+                    return;
+                }
+
+                const submitButton = form.querySelector('button[type="submit"]');
+                const previousDisabledState = submitButton ? submitButton.disabled : false;
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+
+                const formData = new FormData(form);
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: formData,
+                    });
+
+                    const payload = await response.json().catch(() => ({}));
+
+                    if (!response.ok) {
+                        throw new Error(payload.message || 'Unable to process this request right now.');
+                    }
+
+                    const row = form.closest('tr');
+                    if (row) {
+                        row.remove();
+                    }
+
+                    showAjaxToast(payload.message || 'Deleted successfully.', false);
+
+                    const tableBody = form.closest('table')?.querySelector('tbody');
+                    if (tableBody && tableBody.children.length === 0) {
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    showAjaxToast(error.message || 'Delete failed.', true);
+                } finally {
+                    if (submitButton) {
+                        submitButton.disabled = previousDisabledState;
+                    }
+                }
+            });
+        })();
     </script>
     @stack('scripts')
 </body>

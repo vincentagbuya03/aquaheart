@@ -12,19 +12,67 @@
 @endsection
 
 @section('content')
+@php
+    $sortedRefills = $customer->refills
+        ->sortByDesc(fn ($refill) => $refill->refill_date ?? $refill->created_at)
+        ->values();
+
+    $totalRefills = $sortedRefills->count();
+
+    $totalSpent = $sortedRefills->sum(function ($refill) {
+        $computedAmount = (float) ($refill->quantity ?? 0) * (float) ($refill->unit_price ?? 0);
+
+        // Keep backwards compatibility for older records where amount is the only populated value.
+        return $computedAmount > 0 ? $computedAmount : (float) ($refill->amount ?? 0);
+    });
+
+    $averageTicket = $totalRefills > 0 ? $totalSpent / $totalRefills : 0;
+    $lastRefill = $sortedRefills->first();
+    
+    // Calculate payment status breakdown
+    $unpaidAmount = $sortedRefills
+        ->filter(fn ($refill) => ($refill->paymentStatus?->name ?? strtolower($refill->payment_status ?? '')) === 'unpaid')
+        ->sum(fn ($refill) => ((float) ($refill->quantity ?? 0) * (float) ($refill->unit_price ?? 0)) ?: (float) ($refill->amount ?? 0));
+    
+    $partialAmount = $sortedRefills
+        ->filter(fn ($refill) => ($refill->paymentStatus?->name ?? strtolower($refill->payment_status ?? '')) === 'partial')
+        ->sum(fn ($refill) => ((float) ($refill->quantity ?? 0) * (float) ($refill->unit_price ?? 0)) ?: (float) ($refill->amount ?? 0));
+    
+    $paidAmount = $totalSpent - $unpaidAmount - $partialAmount;
+@endphp
+
 <div class="detail-grid">
     <div class="card detail-card">
         <div class="detail-row"><span class="label">Phone</span><strong>{{ $customer->phone ?: 'Not provided' }}</strong></div>
         <div class="detail-row"><span class="label">Address</span><strong>{{ $customer->address ?: 'Walk-in only' }}</strong></div>
-        <div class="detail-row"><span class="label">Member Since</span><strong>{{ $customer->created_at->format('M d, Y') }}</strong></div>
+        <div class="detail-row"><span class="label">Member Since</span><strong>{{ optional($customer->created_at)->format('M d, Y') ?? 'N/A' }}</strong></div>
         <div class="detail-row"><span class="label">Loyalty Points</span><strong>{{ number_format($customer->loyalty_points) }}</strong></div>
     </div>
 
     <div class="card detail-card">
-        <div class="detail-row"><span class="label">Total Refills</span><strong>{{ $customer->refills->count() }}</strong></div>
-        <div class="detail-row"><span class="label">Total Spent</span><strong>PHP {{ number_format($customer->refills->sum('amount'), 2) }}</strong></div>
-        <div class="detail-row"><span class="label">Average Ticket</span><strong>PHP {{ number_format($customer->refills->count() > 0 ? $customer->refills->avg('amount') : 0, 2) }}</strong></div>
-        <div class="detail-row"><span class="label">Last Refill</span><strong>{{ optional($customer->refills->sortByDesc('refill_date')->first()?->refill_date)->format('M d, Y') ?: 'No activity yet' }}</strong></div>
+        <div class="detail-row"><span class="label">Total Refills</span><strong>{{ $totalRefills }}</strong></div>
+        <div class="detail-row"><span class="label">Total Spent</span><strong>PHP {{ number_format($totalSpent, 2) }}</strong></div>
+        <div class="detail-row"><span class="label">Average Ticket</span><strong>PHP {{ number_format($averageTicket, 2) }}</strong></div>
+        <div class="detail-row"><span class="label">Last Refill</span><strong>{{ optional($lastRefill?->refill_date ?? $lastRefill?->created_at)->format('M d, Y') ?: 'No activity yet' }}</strong></div>
+    </div>
+    
+    <div class="card detail-card">
+        <div class="detail-row">
+            <span class="label">Paid</span>
+            <strong style="color: #059669;">₱{{ number_format($paidAmount, 2) }}</strong>
+        </div>
+        <div class="detail-row">
+            <span class="label">Unpaid</span>
+            <strong style="color: #991b1b;">₱{{ number_format($unpaidAmount, 2) }}</strong>
+        </div>
+        <div class="detail-row">
+            <span class="label">Partial</span>
+            <strong style="color: #b45309;">₱{{ number_format($partialAmount, 2) }}</strong>
+        </div>
+        <div class="detail-row">
+            <span class="label">Outstanding Balance</span>
+            <strong style="color: {{ ($unpaidAmount + $partialAmount) > 0 ? '#ef4444' : '#059669' }};">₱{{ number_format($unpaidAmount + $partialAmount, 2) }}</strong>
+        </div>
     </div>
 </div>
 
@@ -34,7 +82,7 @@
         <p>All recorded sales and refills linked to this customer.</p>
     </div>
 
-    @if ($customer->refills->count())
+    @if ($sortedRefills->count())
         <table class="modern-table">
             <thead>
                 <tr>
@@ -47,14 +95,32 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($customer->refills->sortByDesc('refill_date') as $refill)
+                @foreach ($sortedRefills as $refill)
+                    @php
+                        $lineTotal = ((float) ($refill->quantity ?? 0) * (float) ($refill->unit_price ?? 0));
+                        if ($lineTotal <= 0) {
+                            $lineTotal = (float) ($refill->amount ?? 0);
+                        }
+                    @endphp
                     <tr>
                         <td>{{ $refill->receipt_number ?: 'Pending Number' }}</td>
                         <td>{{ $refill->product->name ?? 'Unknown Product' }}</td>
                         <td>{{ $refill->quantity }}</td>
-                        <td>{{ ucfirst($refill->payment_status) }}</td>
-                        <td>PHP {{ number_format($refill->amount, 2) }}</td>
-                        <td>{{ $refill->refill_date->format('M d, Y') }}</td>
+                        <td>
+                            @php
+                                $status = $refill->paymentStatus?->name ?? strtolower($refill->payment_status ?? 'pending');
+                                $statusClass = match($status) {
+                                    'paid' => 'status-paid',
+                                    'unpaid' => 'status-unpaid',
+                                    'partial' => 'status-partial',
+                                    default => 'status-pending'
+                                };
+                                $statusLabel = ucfirst($status);
+                            @endphp
+                            <span class="payment-badge {{ $statusClass }}">{{ $statusLabel }}</span>
+                        </td>
+                        <td>PHP {{ number_format($lineTotal, 2) }}</td>
+                        <td>{{ optional($refill->refill_date)->format('M d, Y') ?? optional($refill->created_at)->format('M d, Y') ?? 'N/A' }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -77,6 +143,37 @@
     .modern-table th, .modern-table td { padding: 16px 12px; border-bottom: 1px solid var(--border); text-align: left; }
     .modern-table th { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
     .empty-state { color: var(--text-muted); }
+    
+    .payment-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .payment-badge.status-paid {
+        background: #ecfdf5;
+        color: #059669;
+    }
+    
+    .payment-badge.status-unpaid {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .payment-badge.status-partial {
+        background: #fef3c7;
+        color: #b45309;
+    }
+    
+    .payment-badge.status-pending {
+        background: #f3f4f6;
+        color: #374151;
+    }
+    
     @media (max-width: 900px) { .detail-grid { grid-template-columns: 1fr; } }
 </style>
 @endpush

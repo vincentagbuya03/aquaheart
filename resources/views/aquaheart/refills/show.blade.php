@@ -18,13 +18,13 @@
         <div class="detail-row"><span class="label">Product</span><strong>{{ $refill->product->name ?? 'Unknown Product' }}</strong></div>
         <div class="detail-row"><span class="label">Quantity</span><strong>{{ $refill->quantity }}</strong></div>
         <div class="detail-row"><span class="label">Unit Price</span><strong>PHP {{ number_format($refill->unit_price, 2) }}</strong></div>
-        <div class="detail-row"><span class="label">Total Amount</span><strong>PHP {{ number_format($refill->amount, 2) }}</strong></div>
+        <div class="detail-row"><span class="label">Total Amount</span><strong>PHP {{ number_format(($refill->quantity ?? 0) * ($refill->unit_price ?? 0), 2) }}</strong></div>
     </div>
     <div class="card detail-card">
-        <div class="detail-row"><span class="label">Payment Status</span><strong>{{ ucfirst($refill->payment_status) }}</strong></div>
-        <div class="detail-row"><span class="label">Service Type</span><strong>{{ ucfirst(str_replace('_', ' ', $refill->service_type)) }}</strong></div>
-        <div class="detail-row"><span class="label">Refill Date</span><strong>{{ $refill->refill_date->format('M d, Y') }}</strong></div>
-        <div class="detail-row"><span class="label">Recorded At</span><strong>{{ $refill->created_at->format('M d, Y h:i A') }}</strong></div>
+        <div class="detail-row"><span class="label">Payment Status</span><strong>{{ ucfirst($refill->payment_status ?? 'paid') }}</strong></div>
+        <div class="detail-row"><span class="label">Service Type</span><strong>{{ ucfirst(str_replace('_', ' ', $refill->service_type ?? 'walk_in')) }}</strong></div>
+        <div class="detail-row"><span class="label">Refill Date</span><strong>{{ optional($refill->refill_date)->format('M d, Y') ?? optional($refill->created_at)->format('M d, Y') ?? 'N/A' }}</strong></div>
+        <div class="detail-row"><span class="label">Recorded At</span><strong>{{ optional($refill->created_at)->format('M d, Y h:i A') ?? 'N/A' }}</strong></div>
         <div class="detail-row notes"><span class="label">Notes</span><p>{{ $refill->notes ?: 'No notes added.' }}</p></div>
     </div>
 </div>

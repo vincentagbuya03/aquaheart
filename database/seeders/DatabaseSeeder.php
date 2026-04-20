@@ -38,26 +38,6 @@ class DatabaseSeeder extends Seeder
         );
 
         // Create water bottle products
-        Product::firstOrCreate(
-            ['name' => '5L Bottle'],
-            [
-                'price' => 2.50,
-                'stock_quantity' => 120,
-                'reorder_level' => 20,
-                'description' => 'Standard 5 liter water bottle refill',
-                'is_active' => true,
-            ]
-        );
 
-        Product::firstOrCreate(
-            ['name' => '10L Bottle'],
-            [
-                'price' => 4.50,
-                'stock_quantity' => 80,
-                'reorder_level' => 15,
-                'description' => 'Large 10 liter water bottle refill',
-                'is_active' => true,
-            ]
-        );
     }
 }
