@@ -40,18 +40,19 @@
 </div>
 
 <div class="filter-bar">
-    <div class="filter-group">
-        <span class="filter-label">WATER TYPE</span>
-        <div class="type-pills">
-            <a href="{{ route('aquaheart.reports.sales', ['type' => 'All']) }}" class="type-pill {{ !request('type') || request('type') == 'All' ? 'active' : '' }}" style="text-decoration: none;">All</a>
-            <a href="{{ route('aquaheart.reports.sales', ['type' => 'Alkaline']) }}" class="type-pill {{ request('type') == 'Alkaline' ? 'active' : '' }}" style="text-decoration: none;">Alkaline</a>
-            <a href="{{ route('aquaheart.reports.sales', ['type' => 'Purified']) }}" class="type-pill {{ request('type') == 'Purified' ? 'active' : '' }}" style="text-decoration: none;">Purified</a>
-            <a href="{{ route('aquaheart.reports.sales', ['type' => 'Distilled']) }}" class="type-pill {{ request('type') == 'Distilled' ? 'active' : '' }}" style="text-decoration: none;">Distilled</a>
+    <div class="logs-toolbar">
+        <div class="logs-search">
+            <i data-lucide="search" size="16"></i>
+            <input id="logsSearchInput" type="text" placeholder="Search by transaction or customer...">
+        </div>
+        <div class="logs-status-chips" role="tablist" aria-label="Log status filter">
+            <button type="button" class="log-chip active" data-status="all">All</button>
+            <button type="button" class="log-chip" data-status="completed">Completed</button>
+            <button type="button" class="log-chip" data-status="pending">Pending</button>
         </div>
     </div>
-    
     <div class="filter-actions">
-        <button class="icon-btn" title="Filters"><i data-lucide="sliders-horizontal"></i></button>
+        <button class="icon-btn" id="logsResetBtn" title="Reset filters"><i data-lucide="sliders-horizontal"></i></button>
         <a href="{{ route('aquaheart.reports.export-refills') }}" class="icon-btn" title="Export CSV"><i data-lucide="download"></i></a>
     </div>
 </div>
@@ -71,7 +72,6 @@
                 <tr>
                     <th>TRANSACTION ID</th>
                     <th>CUSTOMER NAME</th>
-                    <th>WATER TYPE</th>
                     <th>QUANTITY</th>
                     <th>TOTAL PRICE</th>
                     <th>STATUS</th>
@@ -80,26 +80,17 @@
             <tbody>
                 @foreach($recentTransactions as $transaction)
                 @php
-                    $waterType = 'Purified';
-                    $typeClass = 'type-purified';
-                    if (str_contains(strtolower($transaction->product->name ?? ''), 'alkaline')) {
-                        $waterType = 'Alkaline';
-                        $typeClass = 'type-alkaline';
-                    } elseif (str_contains(strtolower($transaction->product->name ?? ''), 'distilled')) {
-                        $waterType = 'Distilled';
-                        $typeClass = 'type-distilled';
-                    }
+                    $txnStatus = strtolower($transaction->payment_status ?? 'completed');
+                    $txnCustomer = strtolower($transaction->customer->name ?? 'guest');
+                    $txnRef = strtolower(substr($transaction->id, 0, 5));
                 @endphp
                 <tr>
-                    <td class="id-cell">#AH-{{ substr($transaction->id, 0, 5) }}</td>
+                    <td class="id-cell" data-log-status="{{ $txnStatus }}" data-log-customer="{{ $txnCustomer }}" data-log-ref="{{ $txnRef }}">#AH-{{ substr($transaction->id, 0, 5) }}</td>
                     <td>
                         <div class="customer-cell">
                             <div class="customer-avatar">{{ substr($transaction->customer->name ?? '?', 0, 1) }}{{ substr(explode(' ', $transaction->customer->name ?? ' ')[1] ?? '', 0, 1) }}</div>
                             <span class="customer-name">{{ $transaction->customer->name ?? 'Guest' }}</span>
                         </div>
-                    </td>
-                    <td>
-                        <span class="water-type-badge {{ $typeClass }}">{{ $waterType }}</span>
                     </td>
                     <td class="quantity-cell">{{ number_format($transaction->quantity, 1) }} Gal</td>
                     <td class="price-cell">PHP {{ number_format($transaction->quantity * $transaction->unit_price, 2) }}</td>
@@ -110,6 +101,9 @@
                     </td>
                 </tr>
                 @endforeach
+                <tr id="logsEmptyState" style="display: none;">
+                    <td colspan="5" class="logs-empty-state">No transactions match your filters.</td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -143,16 +137,16 @@
     .metric-label { display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
     .metric-value { font-size: 1.15rem; font-weight: 800; color: var(--primary); }
 
-    .filter-bar { background: white; padding: 16px 24px; border-radius: 20px; display: flex; align-items: center; gap: 40px; margin-bottom: 32px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-    .filter-group { display: flex; flex-direction: column; gap: 6px; }
-    .filter-label { font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    
-    .dropdown-filter { display: flex; align-items: center; gap: 12px; background: #f8fafc; padding: 10px 16px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 0.85rem; font-weight: 700; color: var(--primary); cursor: pointer; }
-    .dropdown-filter i { color: #64748b; width: 16px; }
-    
-    .type-pills { display: flex; gap: 8px; }
-    .type-pill { border: none; background: #f1f5f9; padding: 8px 16px; border-radius: 10px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
-    .type-pill.active { background: #0284c7; color: white; }
+    .filter-bar { background: white; padding: 14px 20px; border-radius: 20px; display: flex; align-items: center; gap: 18px; margin-bottom: 32px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #eef2f7; }
+    .logs-toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .logs-search { display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; min-width: 320px; }
+    .logs-search i { color: #94a3b8; }
+    .logs-search input { border: none; background: transparent; width: 100%; font: inherit; color: var(--primary); outline: none; }
+    .logs-search input::placeholder { color: #94a3b8; }
+    .logs-status-chips { display: flex; gap: 8px; }
+    .log-chip { border: 1px solid #e2e8f0; background: #f8fafc; padding: 8px 14px; border-radius: 999px; font-size: 0.78rem; font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.2s ease; }
+    .log-chip:hover { border-color: #93c5fd; color: #0f172a; }
+    .log-chip.active { background: #0f172a; border-color: #0f172a; color: #ffffff; }
     
     .filter-actions { margin-left: auto; display: flex; gap: 12px; }
     .icon-btn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; display: flex; align-items: center; justify-content: center; color: #64748b; cursor: pointer; transition: all 0.2s; }
@@ -174,16 +168,12 @@
     .customer-avatar { width: 34px; height: 34px; border-radius: 10px; background: #e0f2fe; color: #0369a1; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; }
     .customer-name { font-size: 0.95rem; font-weight: 700; color: var(--primary); }
     
-    .water-type-badge { padding: 4px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; }
-    .type-purified { background: #ecfdf5; color: #059669; }
-    .type-alkaline { background: #e0f2fe; color: #0284c7; }
-    .type-distilled { background: #f1f5f9; color: #64748b; }
-    
     .quantity-cell { font-weight: 700; color: var(--text-main); font-size: 0.9rem; }
     .price-cell { font-weight: 800; color: var(--primary); font-size: 1rem; }
     .status-pill { padding: 4px 12px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; }
     .status-pill.completed { background: #dcfce7; color: #166534; }
     .status-pill.pending { background: #fef3c7; color: #b45309; }
+    .logs-empty-state { text-align: center; color: #64748b; font-weight: 600; padding: 28px 16px; }
     
     .table-footer { padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; }
     .showing-text { font-size: 0.8rem; color: var(--text-muted); }
@@ -192,10 +182,72 @@
 
     @media (max-width: 1024px) {
         .sales-monitor-header { flex-direction: column; align-items: flex-start; gap: 20px; }
-        .filter-bar { flex-direction: column; align-items: flex-start; gap: 20px; }
+        .filter-bar { flex-direction: column; align-items: stretch; gap: 16px; }
+        .logs-toolbar { width: 100%; }
+        .logs-search { min-width: 0; width: 100%; }
         .filter-actions { margin-left: 0; width: 100%; justify-content: flex-end; }
         .insights-row { grid-template-columns: 1fr; }
     }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+    (() => {
+        const searchInput = document.getElementById('logsSearchInput');
+        const chips = Array.from(document.querySelectorAll('.log-chip'));
+        const resetBtn = document.getElementById('logsResetBtn');
+        const rows = Array.from(document.querySelectorAll('.sales-table tbody tr')).filter((row) => row.id !== 'logsEmptyState');
+        const emptyState = document.getElementById('logsEmptyState');
+
+        if (!searchInput || chips.length === 0 || rows.length === 0) {
+            return;
+        }
+
+        let activeStatus = 'all';
+
+        const applyFilters = () => {
+            const query = searchInput.value.trim().toLowerCase();
+            let visibleCount = 0;
+
+            rows.forEach((row) => {
+                const statusCell = row.querySelector('[data-log-status]');
+                const status = statusCell?.dataset.logStatus || '';
+                const customer = statusCell?.dataset.logCustomer || '';
+                const ref = statusCell?.dataset.logRef || '';
+                const statusMatch = activeStatus === 'all' || status === activeStatus;
+                const textMatch = query === '' || customer.includes(query) || ref.includes(query);
+                const shouldShow = statusMatch && textMatch;
+
+                row.style.display = shouldShow ? '' : 'none';
+                if (shouldShow) {
+                    visibleCount += 1;
+                }
+            });
+
+            if (emptyState) {
+                emptyState.style.display = visibleCount === 0 ? '' : 'none';
+            }
+        };
+
+        chips.forEach((chip) => {
+            chip.addEventListener('click', () => {
+                chips.forEach((btn) => btn.classList.remove('active'));
+                chip.classList.add('active');
+                activeStatus = chip.dataset.status || 'all';
+                applyFilters();
+            });
+        });
+
+        searchInput.addEventListener('input', applyFilters);
+
+        resetBtn?.addEventListener('click', () => {
+            activeStatus = 'all';
+            chips.forEach((btn) => btn.classList.toggle('active', btn.dataset.status === 'all'));
+            searchInput.value = '';
+            applyFilters();
+        });
+    })();
+</script>
 @endpush
 @endsection

@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CashierDashboardController;
 use App\Http\Controllers\CashierSettingsController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ActivityLogController;
 
 // Public routes
 Route::get('/', function () { return view('welcome'); })->name('home');
@@ -111,6 +112,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('customers', CustomerController::class);
         Route::resource('products', ProductController::class);
         Route::resource('refills', RefillController::class);
+        Route::get('logs', [ActivityLogController::class, 'index'])->name('logs.index');
         Route::patch('refills/{refill}/payment-status', [RefillController::class, 'updatePaymentStatus'])->name('refills.payment-status.update');
         Route::post('refills/{refill}/payment-status', [RefillController::class, 'updatePaymentStatus'])->name('refills.payment-status.update.post');
         

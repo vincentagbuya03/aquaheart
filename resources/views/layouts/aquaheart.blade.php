@@ -482,6 +482,63 @@
             .nav-link { justify-content: center; }
         }
 
+        /* Quick Action Menu */
+        .quick-action-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+            min-width: 220px;
+            margin-top: 8px;
+            z-index: 1001;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .quick-action-item {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .quick-action-item:last-child {
+            border-bottom: none;
+        }
+
+        .quick-action-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .quick-action-link:hover {
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .quick-action-link i {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2.5;
+        }
+
         @stack('styles')
     </style>
 </head>
@@ -527,6 +584,12 @@
                     <a href="{{ route('aquaheart.refills.index') }}" class="nav-link {{ request()->routeIs('aquaheart.refills.index') ? 'active' : '' }}">
                         <i data-lucide="receipt"></i>
                         <span>Transaction Logs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('aquaheart.logs.index') }}" class="nav-link {{ request()->routeIs('aquaheart.logs.*') ? 'active' : '' }}">
+                        <i data-lucide="history"></i>
+                        <span>Activity Logs</span>
                     </a>
                 </li>
             </ul>
@@ -590,9 +653,37 @@
                 <a href="#" style="display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 0.85rem;">
                     <i data-lucide="help-circle" size="18"></i> Help
                 </a>
-                <a href="#" class="btn-primary" style="padding: 8px 16px; gap: 8px; display: flex; align-items: center;">
+                <button id="quickActionBtn" class="btn-primary" style="padding: 8px 16px; gap: 8px; display: flex; align-items: center; border: none; cursor: pointer;">
                     <i data-lucide="zap" size="16" style="stroke-width: 2.5;"></i> Quick Action
-                </a>
+                </button>
+                
+                <!-- Quick Action Menu -->
+                <div id="quickActionMenu" class="quick-action-menu" style="display: none;">
+                    <div class="quick-action-item">
+                        <a href="{{ route('aquaheart.refills.create') }}" class="quick-action-link">
+                            <i data-lucide="plus-circle"></i>
+                            <span>New Transaction</span>
+                        </a>
+                    </div>
+                    <div class="quick-action-item">
+                        <a href="{{ route('aquaheart.products.create') }}" class="quick-action-link">
+                            <i data-lucide="package-plus"></i>
+                            <span>Add Product</span>
+                        </a>
+                    </div>
+                    <div class="quick-action-item">
+                        <a href="{{ route('aquaheart.customers.index') }}" class="quick-action-link">
+                            <i data-lucide="user-plus"></i>
+                            <span>View Customers</span>
+                        </a>
+                    </div>
+                    <div class="quick-action-item">
+                        <a href="{{ route('aquaheart.reports.sales') }}" class="quick-action-link">
+                            <i data-lucide="bar-chart-3"></i>
+                            <span>Sales Report</span>
+                        </a>
+                    </div>
+                </div>
                 
                 <div style="width: 1px; height: 24px; background: var(--border);"></div>
                 

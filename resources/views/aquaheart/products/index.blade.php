@@ -9,6 +9,10 @@
         <div class="breadcrumb">ADMIN PORTAL &bull; WAREHOUSE</div>
         <h1 class="inventory-title">Inventory<span>Monitor</span></h1>
     </div>
+    <a href="{{ route('aquaheart.products.create') }}" class="btn-add-product">
+        <i data-lucide="plus"></i>
+        Add Product
+    </a>
 </div>
 
 <div class="highlights-grid">
@@ -65,8 +69,37 @@
     <div class="table-header-row">
         <h3 class="table-title">Detailed Asset List</h3>
         <div class="table-actions">
-            <button class="icon-btn"><i data-lucide="filter" size="18"></i></button>
-            <button class="icon-btn"><i data-lucide="download" size="18"></i></button>
+            <button class="icon-btn" id="filterBtn" title="Filter inventory"><i data-lucide="filter" size="18"></i></button>
+            <button class="icon-btn" id="downloadBtn" title="Download inventory"><i data-lucide="download" size="18"></i></button>
+        </div>
+    </div>
+
+    <!-- Filter Panel -->
+    <div id="filterPanel" class="filter-panel" style="display: none;">
+        <div class="filter-content">
+            <div class="filter-header">
+                <h4>Filter Inventory</h4>
+                <button class="close-filter" id="closeFilterBtn">&times;</button>
+            </div>
+            <div class="filter-options">
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="Healthy">Healthy</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="Critical">Critical</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="searchFilter" class="filter-input" placeholder="Search by product name...">
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn-apply-filter" id="applyFilterBtn">Apply</button>
+                <button class="btn-reset-filter" id="resetFilterBtn">Reset</button>
+            </div>
         </div>
     </div>
 
@@ -159,7 +192,11 @@
     /* Hide Default Header from layout */
     .section-header { display: none !important; }
     
-    .inventory-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+    .inventory-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; gap: 24px; }
+    
+    .btn-add-product { background: var(--primary); color: white; padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; transition: var(--transition); white-space: nowrap; }
+    .btn-add-product:hover { transform: translateY(-1px); opacity: 0.9; }
+    .btn-add-product i { stroke-width: 2.5; }
     
     .breadcrumb { font-size: 0.7rem; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
     .inventory-title { font-size: 2.2rem; font-weight: 800; color: var(--primary); letter-spacing: -1px; display: flex; gap: 8px; align-items: center; }
@@ -239,11 +276,146 @@
     .page-link:hover { color: var(--primary); }
     .page-link.disabled { opacity: 0.5; pointer-events: none; }
     
+    /* Filter Panel Styles */
+    .filter-panel { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 1001; }
+    .filter-content { background: white; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+    .filter-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .filter-header h4 { font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+    .close-filter { background: none; border: none; font-size: 28px; color: var(--text-muted); cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+    .close-filter:hover { color: var(--primary); }
+    
+    .filter-options { margin-bottom: 24px; }
+    .filter-group { margin-bottom: 16px; }
+    .filter-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
+    .filter-select, .filter-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 0.9rem; }
+    .filter-select:focus, .filter-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    
+    .filter-actions { display: flex; gap: 12px; }
+    .btn-apply-filter, .btn-reset-filter { flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; border: none; cursor: pointer; transition: var(--transition); }
+    .btn-apply-filter { background: var(--primary); color: white; }
+    .btn-apply-filter:hover { opacity: 0.9; }
+    .btn-reset-filter { background: var(--border); color: var(--text-main); }
+    .btn-reset-filter:hover { background: #cbd5e1; }
+    
     @media (max-width: 1024px) {
         .highlights-grid { grid-template-columns: 1fr; }
         .stats-row { flex-direction: column; align-items: flex-start; gap: 20px; }
         .stat-divider { width: 100%; height: 1px; }
     }
+
 </style>
+@endpush
+
+@push('scripts_footer')
+<script>
+    // Initialize Lucide icons
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+
+    // Filter Button Functionality
+    const filterBtn = document.getElementById('filterBtn');
+    const filterPanel = document.getElementById('filterPanel');
+    const closeFilterBtn = document.getElementById('closeFilterBtn');
+    const applyFilterBtn = document.getElementById('applyFilterBtn');
+    const resetFilterBtn = document.getElementById('resetFilterBtn');
+    const statusFilter = document.getElementById('statusFilter');
+    const searchFilter = document.getElementById('searchFilter');
+    const inventoryTable = document.querySelector('.inventory-table tbody');
+
+    if (filterBtn) {
+        filterBtn.addEventListener('click', () => {
+            filterPanel.style.display = filterPanel.style.display === 'none' ? 'flex' : 'none';
+        });
+    }
+
+    if (closeFilterBtn) {
+        closeFilterBtn.addEventListener('click', () => {
+            filterPanel.style.display = 'none';
+        });
+    }
+
+    if (filterPanel) {
+        filterPanel.addEventListener('click', (e) => {
+            if (e.target === filterPanel) {
+                filterPanel.style.display = 'none';
+            }
+        });
+    }
+
+    if (applyFilterBtn) {
+        applyFilterBtn.addEventListener('click', () => {
+            const statusValue = statusFilter.value;
+            const searchValue = searchFilter.value.toLowerCase();
+            const rows = inventoryTable.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                const statusPill = row.querySelector('.status-pill');
+                const itemName = row.querySelector('.item-name');
+                const rowStatus = statusPill ? statusPill.textContent.trim() : '';
+                const rowName = itemName ? itemName.textContent.toLowerCase() : '';
+
+                let showRow = true;
+
+                if (statusValue && rowStatus !== statusValue) {
+                    showRow = false;
+                }
+
+                if (searchValue && !rowName.includes(searchValue)) {
+                    showRow = false;
+                }
+
+                row.style.display = showRow ? '' : 'none';
+            });
+
+            filterPanel.style.display = 'none';
+        });
+    }
+
+    if (resetFilterBtn) {
+        resetFilterBtn.addEventListener('click', () => {
+            statusFilter.value = '';
+            searchFilter.value = '';
+            const rows = inventoryTable.querySelectorAll('tr');
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+            filterPanel.style.display = 'none';
+        });
+    }
+
+    // Download Button Functionality
+    const downloadBtn = document.getElementById('downloadBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+            const table = document.querySelector('.inventory-table');
+            let csv = 'ITEM DESCRIPTION,UNIT,CURRENT STOCK,REORDER LEVEL,STATUS\n';
+
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length > 0) {
+                    const itemName = cells[0].querySelector('.item-name')?.textContent || '';
+                    const unit = cells[1].textContent.trim();
+                    const stock = cells[2].textContent.trim();
+                    const reorder = cells[3].textContent.trim();
+                    const status = cells[4].textContent.trim();
+
+                    csv += `"${itemName}","${unit}","${stock}","${reorder}","${status}"\n`;
+                }
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `inventory_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+</script>
 @endpush
 @endsection
