@@ -164,7 +164,7 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
     <nav>
@@ -200,7 +200,6 @@
         </div>
     </div>
 
-    <script src="{{ asset('js/app.js') }}"></script>
     <script>
         const logoutModal = document.getElementById('logoutModal');
         const logoutForm = document.getElementById('logoutForm');

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 06, 2026 at 04:15 PM
+-- Generation Time: Apr 24, 2026 at 04:49 PM
 -- Server version: 8.4.3
 -- PHP Version: 8.3.26
 
@@ -20,6 +20,27 @@ SET time_zone = "+00:00";
 --
 -- Database: `aquaheart`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activity_logs`
+--
+
+CREATE TABLE `activity_logs` (
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `action` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `route_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `method` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `entity_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `entity_id` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `meta` json DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -48,6 +69,33 @@ CREATE TABLE `cache_locks` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `contact_messages`
+--
+
+CREATE TABLE `contact_messages` (
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `full_name` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `inquiry` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT '0',
+  `read_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `contact_messages`
+--
+
+INSERT INTO `contact_messages` (`id`, `full_name`, `email`, `phone`, `inquiry`, `message`, `is_read`, `read_at`, `created_at`, `updated_at`) VALUES
+('019db0d3-ac28-717d-a6e3-8d1aae85bcfb', 'Administrator', 'glend143@gmail.com', NULL, 'refill inquiry', 'HAHAHAHAAhahah', 0, NULL, '2026-04-21 16:15:55', '2026-04-21 16:15:55'),
+('019db0da-5037-73dd-b631-33286a4c0762', 'Administrator', 'glend143@gmail.com', '09122354762', 'refill inquiry', 'pabili yelo', 0, NULL, '2026-04-21 16:23:10', '2026-04-21 16:23:10');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `customers`
 --
 
@@ -69,8 +117,7 @@ CREATE TABLE `customers` (
 --
 
 INSERT INTO `customers` (`id`, `name`, `street`, `city`, `province`, `zip_code`, `phone`, `loyalty_points`, `created_at`, `updated_at`) VALUES
-('019d6340-eabc-73c8-97a5-51bfdf29b0f6', 'Nick VIncent Agbuya', 'turac san carlos city pangasin', NULL, NULL, NULL, '+639122354762', 5, '2026-04-06 14:44:52', '2026-04-06 14:48:14'),
-('019d6353-86de-70f0-969a-ff26633280cf', 'John Carlo Banaag', NULL, NULL, NULL, NULL, NULL, 1, '2026-04-06 15:05:11', '2026-04-06 15:05:11');
+('019dabcc-11a1-724b-90ae-8046f3483388', 'Vincent Agbuya', NULL, NULL, NULL, NULL, NULL, 3, '2026-04-20 16:49:31', '2026-04-20 16:49:31');
 
 -- --------------------------------------------------------
 
@@ -140,22 +187,26 @@ CREATE TABLE `migrations` (
 --
 
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
-(1, '0001_01_01_000000_create_users_table', 1),
-(2, '0001_01_01_000001_create_cache_table', 1),
-(3, '0001_01_01_000002_create_jobs_table', 1),
-(4, '2026_03_28_000010_create_customers_table', 1),
-(5, '2026_03_28_000011_create_products_table', 1),
-(6, '2026_03_28_000012_create_refills_table', 1),
-(7, '2026_03_31_000000_add_is_admin_to_users_table', 1),
-(8, '2026_03_31_000001_update_refills_table', 1),
-(9, '2026_03_31_000002_add_business_fields_to_core_tables', 1),
-(10, '2026_04_05_012119_add_is_cashier_to_users_table', 1),
-(11, '2026_04_05_012936_add_user_id_to_refills_table', 1),
-(12, '2026_04_05_013706_drop_note_column_from_refills_table', 1),
-(13, '2026_04_06_160000_split_customer_address_columns', 2),
-(14, '2026_04_06_160100_create_refill_lookup_tables', 2),
-(15, '2026_04_06_160200_normalize_refills_table', 2),
-(16, '2026_04_06_170000_adjust_lookups_and_customer_address_lengths', 3);
+(18, '0001_01_01_000000_create_users_table', 1),
+(19, '0001_01_01_000001_create_cache_table', 1),
+(20, '0001_01_01_000002_create_jobs_table', 1),
+(21, '2026_03_28_000010_create_customers_table', 1),
+(22, '2026_03_28_000011_create_products_table', 1),
+(23, '2026_03_28_000012_create_refills_table', 1),
+(24, '2026_03_31_000000_add_is_admin_to_users_table', 1),
+(25, '2026_03_31_000001_update_refills_table', 1),
+(26, '2026_03_31_000002_add_business_fields_to_core_tables', 1),
+(27, '2026_04_05_012119_add_is_cashier_to_users_table', 1),
+(28, '2026_04_05_012936_add_user_id_to_refills_table', 1),
+(29, '2026_04_05_013706_drop_note_column_from_refills_table', 1),
+(30, '2026_04_06_160000_split_customer_address_columns', 1),
+(31, '2026_04_06_160100_create_refill_lookup_tables', 1),
+(32, '2026_04_06_160200_normalize_refills_table', 1),
+(33, '2026_04_06_170000_adjust_lookups_and_customer_address_lengths', 1),
+(34, '2026_04_18_000000_add_partial_payment_amounts_to_refills_table', 1),
+(35, '2026_04_21_020000_create_activity_logs_table', 2),
+(36, '2026_04_22_000100_create_contact_messages_table', 3),
+(37, '2026_04_22_000200_add_phone_to_contact_messages_table', 4);
 
 -- --------------------------------------------------------
 
@@ -212,8 +263,8 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `name`, `price`, `stock_quantity`, `reorder_level`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
-('019d599d-a5e1-700b-9382-9846d72c3623', 'Gallon', 25.00, 74, 15, 'Gallon of water', 1, '2026-04-04 17:49:57', '2026-04-06 15:05:11'),
-('019d634e-f311-700b-b2ba-7ec87f5a657a', '500 ml Bottle Water', 15.00, 10, 5, '500 ml Bottle Water', 1, '2026-04-06 15:00:11', '2026-04-06 15:00:11');
+('019dabc7-a350-73e3-8d8e-9f6e1ab5a434', 'Gallon', 30.00, 97, 10, NULL, 1, '2026-04-20 16:44:40', '2026-04-20 16:49:31'),
+('019dabc8-033e-73f8-9554-175829a15515', 'ice Cube', 20.00, 100, 10, NULL, 1, '2026-04-20 16:45:05', '2026-04-20 16:45:05');
 
 -- --------------------------------------------------------
 
@@ -229,6 +280,8 @@ CREATE TABLE `refills` (
   `receipt_number` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `quantity` int UNSIGNED NOT NULL DEFAULT '1',
   `unit_price` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `paid_amount` decimal(10,2) DEFAULT NULL COMMENT 'Amount already paid for partial payments',
+  `partial_amount` decimal(10,2) DEFAULT NULL COMMENT 'Amount still owed for partial payments',
   `payment_status_id` tinyint UNSIGNED NOT NULL,
   `service_type_id` tinyint UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -240,9 +293,8 @@ CREATE TABLE `refills` (
 -- Dumping data for table `refills`
 --
 
-INSERT INTO `refills` (`id`, `customer_id`, `product_id`, `user_id`, `receipt_number`, `quantity`, `unit_price`, `payment_status_id`, `service_type_id`, `created_at`, `updated_at`, `notes`) VALUES
-('019d6344-0016-72d4-a296-7b50c137717a', '019d6340-eabc-73c8-97a5-51bfdf29b0f6', '019d599d-a5e1-700b-9382-9846d72c3623', '019d634f-8182-73a0-a3a1-2a0eed50a86d', 'AQ-20260406-0001', 5, 25.00, 1, 2, '2026-04-06 14:48:14', '2026-04-06 14:48:14', 'DELIVER ASAP'),
-('019d6353-86ea-7005-912a-387e93f31660', '019d6353-86de-70f0-969a-ff26633280cf', '019d599d-a5e1-700b-9382-9846d72c3623', '019d634f-8182-73a0-a3a1-2a0eed50a86d', 'AQ-20260406-0002', 1, 25.00, 1, 1, '2026-04-06 15:05:11', '2026-04-06 15:05:11', NULL);
+INSERT INTO `refills` (`id`, `customer_id`, `product_id`, `user_id`, `receipt_number`, `quantity`, `unit_price`, `paid_amount`, `partial_amount`, `payment_status_id`, `service_type_id`, `created_at`, `updated_at`, `notes`) VALUES
+('019dabcc-11c8-7035-a578-2bb34d19e2c0', '019dabcc-11a1-724b-90ae-8046f3483388', '019dabc7-a350-73e3-8d8e-9f6e1ab5a434', '019da100-9b90-7057-b3cc-9942c92402a0', 'AQ-20260421-0001', 3, 30.00, NULL, 90.00, 1, 2, '2026-04-20 16:49:31', '2026-04-20 16:49:31', NULL);
 
 -- --------------------------------------------------------
 
@@ -284,7 +336,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('D2yaW9Fh54Rg4pzGPuJXxSOY2eLfkbd45SMgjf6A', '019d599d-a500-70fc-b17e-01e00f4c78a6', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', 'eyJfdG9rZW4iOiJUdWNiamJHbmE3TWJ1VFVrUkwzWFUydHRKNndKalJ0OHR2c3R2cjllIiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119LCJfcHJldmlvdXMiOnsidXJsIjoiaHR0cDpcL1wvMTI3LjAuMC4xOjgwMDBcL2FxdWFoZWFydFwvcmVwb3J0c1wvZXhwb3J0LXJlZmlsbHMiLCJyb3V0ZSI6ImFxdWFoZWFydC5yZXBvcnRzLmV4cG9ydC1yZWZpbGxzIn0sImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjoiMDE5ZDU5OWQtYTUwMC03MGZjLWIxN2UtMDFlMDBmNGM3OGE2In0=', 1775488980);
+('r8ZcWRCw5qyKCoGCVlYBBgpeGGs35s9BGMlVwUsT', '019da100-9b90-7057-b3cc-9942c92402a0', '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0', 'eyJfdG9rZW4iOiJyWGQ3clp1bVZKUEVndGk0NzAyQWRmS1BXZTVUYmNMcVozTTVxbGs5IiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119LCJfcHJldmlvdXMiOnsidXJsIjoiaHR0cDpcL1wvMTI3LjAuMC4xOjgwMDBcL2FxdWFoZWFydFwvbWVzc2FnZXMiLCJyb3V0ZSI6ImFxdWFoZWFydC5tZXNzYWdlcy5pbmRleCJ9LCJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI6IjAxOWRhMTAwLTliOTAtNzA1Ny1iM2NjLTk5NDJjOTI0MDJhMCJ9', 1776788603);
 
 -- --------------------------------------------------------
 
@@ -310,13 +362,24 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `is_admin`, `is_cashier`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-('019d599d-a500-70fc-b17e-01e00f4c78a6', 'Admin User', 'admin@aquaheart.com', 1, 0, '2026-04-04 17:49:56', '$2y$12$jpqDGNJSVwB6JR9MqWe8NuuPIRH4rDCjb3pOt/QNwVFR3lkcOSRy6', 'DUmcwKfPgPdqbwpzLZGDL0kRFx1wXIPyXSbTuwITAEHRs6vypnbMFuFlCnYF', '2026-04-04 17:49:56', '2026-04-04 17:49:56'),
-('019d599d-a5d7-7208-ab4d-c904b38fb791', 'Manager', 'manager@aquaheart.com', 1, 0, '2026-04-04 17:49:57', '$2y$12$qTG.WvjyRXZwhV8lkc.gXelGj8AZiKH7kGTLBragFhf3.FekS.dNq', NULL, '2026-04-04 17:49:57', '2026-04-04 17:49:57'),
-('019d634f-8182-73a0-a3a1-2a0eed50a86d', 'Vincent Agbuya', 'vincentaguya3@gmail.com', 0, 1, NULL, '$2y$12$eDTctFBv9VbI30pIrO8WyOrYURtc1.CMz2SLfujG8yK10Lje4tMkO', NULL, '2026-04-06 15:00:48', '2026-04-06 15:00:48');
+('019da100-9b90-7057-b3cc-9942c92402a0', 'Admin User', 'admin@aquaheart.com', 1, 0, '2026-04-18 14:31:04', '$2y$12$1uiKI.wZvNnje7I5FyPi7.2QyfLwOYPStcYnDr72Z2C2QQGa4nrZi', NULL, '2026-04-18 14:31:04', '2026-04-18 14:31:04'),
+('019da100-9c64-72da-92d2-42d7d75f2f28', 'Manager', 'manager@aquaheart.com', 1, 0, '2026-04-18 14:31:05', '$2y$12$dvAu56sWnOskn1GzpjPLseuE4fnO7YiwQDY.w2pwoRAjrHYSj.TsG', NULL, '2026-04-18 14:31:05', '2026-04-18 14:31:05');
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `activity_logs_user_id_foreign` (`user_id`),
+  ADD KEY `activity_logs_action_index` (`action`),
+  ADD KEY `activity_logs_route_name_index` (`route_name`),
+  ADD KEY `activity_logs_entity_type_index` (`entity_type`),
+  ADD KEY `activity_logs_entity_id_index` (`entity_id`),
+  ADD KEY `activity_logs_created_at_index` (`created_at`);
 
 --
 -- Indexes for table `cache`
@@ -331,6 +394,13 @@ ALTER TABLE `cache`
 ALTER TABLE `cache_locks`
   ADD PRIMARY KEY (`key`),
   ADD KEY `cache_locks_expiration_index` (`expiration`);
+
+--
+-- Indexes for table `contact_messages`
+--
+ALTER TABLE `contact_messages`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `contact_messages_is_read_created_at_index` (`is_read`,`created_at`);
 
 --
 -- Indexes for table `customers`
@@ -436,11 +506,17 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD CONSTRAINT `activity_logs_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `refills`

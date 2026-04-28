@@ -12,6 +12,9 @@ use App\Http\Controllers\CashierDashboardController;
 use App\Http\Controllers\CashierSettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ContactMessageController;
+use App\Http\Controllers\SupportController;
 
 // Public routes
 Route::get('/', function () { return view('welcome'); })->name('home');
@@ -84,7 +87,8 @@ Route::get('/delivery/products/{product}', function (Product $product) {
         ),
     ]);
 })->name('delivery.product-data');
-Route::get('/contact', function () { return view('public.contact'); })->name('contact');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 Route::get('/resources', function () { return view('public.resources'); })->name('resources');
 
 // Authentication routes
@@ -113,6 +117,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('products', ProductController::class);
         Route::resource('refills', RefillController::class);
         Route::get('logs', [ActivityLogController::class, 'index'])->name('logs.index');
+        Route::get('messages', [ContactMessageController::class, 'index'])->name('messages.index');
+        Route::patch('messages/{contactMessage}/read', [ContactMessageController::class, 'markAsRead'])->name('messages.read');
         Route::patch('refills/{refill}/payment-status', [RefillController::class, 'updatePaymentStatus'])->name('refills.payment-status.update');
         Route::post('refills/{refill}/payment-status', [RefillController::class, 'updatePaymentStatus'])->name('refills.payment-status.update.post');
         
@@ -124,5 +130,8 @@ Route::middleware('auth')->group(function () {
             Route::get('export-refills', [ReportController::class, 'exportRefills'])->name('export-refills');
             Route::get('print-refills', [ReportController::class, 'printRefills'])->name('print-refills');
         });
+
+        // Support
+        Route::get('support', [SupportController::class, 'index'])->name('support');
     });
 });

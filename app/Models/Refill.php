@@ -59,4 +59,9 @@ class Refill extends Model
     {
         return $this->belongsTo(PaymentStatus::class);
     }
+
+    public function getPaymentStatusAttribute()
+    {
+        return strtolower($this->paymentStatus->name ?? 'paid');
+    }
 }

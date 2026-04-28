@@ -115,8 +115,22 @@
                     </td>
                     <td>
                         <div class="amount-cell">
-                            <span class="currency">PHP</span>
-                            <span class="value">{{ number_format($refill->total_amount ?? ($refill->quantity * $refill->unit_price), 2) }}</span>
+                            <div class="total-row">
+                                <span class="currency">PHP</span>
+                                <span class="value">{{ number_format($refill->total_amount ?? ($refill->quantity * $refill->unit_price), 2) }}</span>
+                            </div>
+                            @if(($refill->payment_status ?? '') === 'partial' && ($refill->partial_amount > 0 || $refill->paid_amount > 0))
+                                <div class="partial-info">
+                                    <div class="progress-bar">
+                                        @php
+                                            $total = $refill->total_amount ?? ($refill->quantity * $refill->unit_price);
+                                            $percent = $total > 0 ? min(100, ($refill->paid_amount / $total) * 100) : 0;
+                                        @endphp
+                                        <div class="progress-fill" style="width: {{ $percent }}%"></div>
+                                    </div>
+                                    <span class="balance">Balance: PHP {{ number_format($refill->partial_amount ?? ($total - $refill->paid_amount), 2) }}</span>
+                                </div>
+                            @endif
                         </div>
                     </td>
                     <td class="text-right">
@@ -214,9 +228,15 @@
     .status-dropdown.unpaid { background: #fee2e2; color: #b91c1c; }
     .status-dropdown.partial { background: #fef3c7; color: #b45309; }
 
-    .amount-cell { display: flex; align-items: baseline; gap: 4px; }
+    .amount-cell { display: flex; flex-direction: column; gap: 4px; }
+    .amount-cell .total-row { display: flex; align-items: baseline; gap: 4px; }
     .amount-cell .currency { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); }
     .amount-cell .value { font-size: 1.1rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+
+    .partial-info { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+    .progress-bar { width: 100px; height: 4px; background: #f1f5f9; border-radius: 2px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #f59e0b; border-radius: 2px; }
+    .balance { font-size: 0.7rem; font-weight: 700; color: #b45309; }
 
     .action-group { display: flex; gap: 8px; justify-content: flex-end; }
     .act-btn { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #64748b; background: #f8fafc; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; }

@@ -13,19 +13,27 @@ class CustomerController extends Controller
         $statusFilter = request('status', 'all');
 
         $query = Customer::selectRaw('customers.*, 
-                COALESCE(SUM(CASE WHEN ps.name = "paid" THEN rf.quantity * rf.unit_price ELSE 0 END), 0) as total_paid,
-                COALESCE(SUM(CASE WHEN ps.name = "unpaid" THEN rf.quantity * rf.unit_price ELSE 0 END), 0) as total_unpaid,
-                COALESCE(SUM(CASE WHEN ps.name = "partial" THEN rf.quantity * rf.unit_price ELSE 0 END), 0) as total_partial')
+                COALESCE(SUM(CASE 
+                    WHEN ps.name = "paid" THEN rf.quantity * rf.unit_price 
+                    WHEN ps.name = "partial" THEN rf.paid_amount 
+                    ELSE 0 
+                END), 0) as total_paid_sum,
+                COALESCE(SUM(CASE 
+                    WHEN ps.name = "unpaid" THEN rf.quantity * rf.unit_price 
+                    WHEN ps.name = "partial" THEN rf.partial_amount 
+                    ELSE 0 
+                END), 0) as total_outstanding_sum,
+                COALESCE(SUM(rf.quantity * rf.unit_price), 0) as total_spent_sum')
             ->leftJoin('refills as rf', 'customers.id', '=', 'rf.customer_id')
             ->leftJoin('payment_statuses as ps', 'rf.payment_status_id', '=', 'ps.id');
 
         // Filter by payment status
         if ($statusFilter === 'unpaid') {
-            $query->havingRaw('total_unpaid > 0');
+            $query->havingRaw('total_outstanding_sum > 0');
         } elseif ($statusFilter === 'partial') {
-            $query->havingRaw('total_unpaid = 0 AND total_partial > 0');
+            $query->havingRaw('total_paid_sum > 0 AND total_outstanding_sum > 0');
         } elseif ($statusFilter === 'paid') {
-            $query->havingRaw('total_unpaid = 0 AND total_partial = 0');
+            $query->havingRaw('total_outstanding_sum = 0 AND total_spent_sum > 0');
         }
 
         $customers = $query
@@ -43,20 +51,28 @@ class CustomerController extends Controller
 
         // Get summary statistics
         $allCustomers = Customer::selectRaw('customers.*, 
-                COALESCE(SUM(CASE WHEN ps.name = "paid" THEN rf.quantity * rf.unit_price ELSE 0 END), 0) as total_paid,
-                COALESCE(SUM(CASE WHEN ps.name = "unpaid" THEN rf.quantity * rf.unit_price ELSE 0 END), 0) as total_unpaid,
-                COALESCE(SUM(CASE WHEN ps.name = "partial" THEN rf.quantity * rf.unit_price ELSE 0 END), 0) as total_partial')
+                COALESCE(SUM(CASE 
+                    WHEN ps.name = "paid" THEN rf.quantity * rf.unit_price 
+                    WHEN ps.name = "partial" THEN rf.paid_amount 
+                    ELSE 0 
+                END), 0) as total_paid_sum,
+                COALESCE(SUM(CASE 
+                    WHEN ps.name = "unpaid" THEN rf.quantity * rf.unit_price 
+                    WHEN ps.name = "partial" THEN rf.partial_amount 
+                    ELSE 0 
+                END), 0) as total_outstanding_sum,
+                COALESCE(SUM(rf.quantity * rf.unit_price), 0) as total_spent_sum')
             ->leftJoin('refills as rf', 'customers.id', '=', 'rf.customer_id')
             ->leftJoin('payment_statuses as ps', 'rf.payment_status_id', '=', 'ps.id')
             ->groupBy('customers.id')
             ->get();
 
         $stats = [
-            'total_customers' => $allCustomers->count(),
-            'unpaid_customers' => $allCustomers->filter(fn($c) => $c->total_unpaid > 0)->count(),
-            'partial_customers' => $allCustomers->filter(fn($c) => $c->total_unpaid == 0 && $c->total_partial > 0)->count(),
-            'paid_customers' => $allCustomers->filter(fn($c) => $c->total_unpaid == 0 && $c->total_partial == 0)->count(),
-            'total_outstanding' => $allCustomers->sum(fn($c) => ($c->total_unpaid ?? 0) + ($c->total_partial ?? 0)),
+            'total_customers' => Customer::count(),
+            'unpaid_customers' => $allCustomers->filter(fn($c) => $c->total_outstanding_sum > 0)->count(),
+            'partial_customers' => $allCustomers->filter(fn($c) => $c->total_paid_sum > 0 && $c->total_outstanding_sum > 0)->count(),
+            'paid_customers' => $allCustomers->filter(fn($c) => $c->total_outstanding_sum == 0 && $c->total_spent_sum > 0)->count(),
+            'total_outstanding' => $allCustomers->sum('total_outstanding_sum'),
         ];
 
         return view('aquaheart.customers.index', compact('customers', 'stats', 'statusFilter'));

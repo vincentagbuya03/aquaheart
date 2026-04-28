@@ -108,12 +108,16 @@
                 <tbody>
                     @foreach ($customers as $customer)
                         @php
-                            $totalSpent = ($customer->total_paid ?? 0) + ($customer->total_unpaid ?? 0) + ($customer->total_partial ?? 0);
-                            $outstanding = ($customer->total_unpaid ?? 0) + ($customer->total_partial ?? 0);
+                            $totalSpent = $customer->total_spent_sum ?? 0;
+                            $outstanding = $customer->total_outstanding_sum ?? 0;
+                            
                             if ($outstanding > 0) {
-                                $statusClass = $customer->total_unpaid > 0 ? 'status-unpaid' : 'status-partial';
-                                $statusLabel = $customer->total_unpaid > 0 ? 'Unpaid' : 'Partial';
-                                $rowClass = $customer->total_unpaid > 0 ? 'row-unpaid' : 'row-partial';
+                                // If they've paid something but still owe, it's partial. 
+                                // If they've paid nothing and owe, it's unpaid.
+                                $hasPaidSomething = ($customer->total_paid_sum ?? 0) > 0;
+                                $statusClass = $hasPaidSomething ? 'status-partial' : 'status-unpaid';
+                                $statusLabel = $hasPaidSomething ? 'Partial' : 'Unpaid';
+                                $rowClass = $hasPaidSomething ? 'row-partial' : 'row-unpaid';
                             } else {
                                 $statusClass = 'status-paid';
                                 $statusLabel = 'Paid';

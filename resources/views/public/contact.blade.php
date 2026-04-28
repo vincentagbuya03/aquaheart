@@ -165,6 +165,31 @@
         color: var(--slate-700);
     }
 
+    .form-alert {
+        padding: 14px 16px;
+        border-radius: 14px;
+        font-size: 0.92rem;
+        font-weight: 600;
+    }
+
+    .form-alert.success {
+        background: #ecfdf3;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .form-alert.error {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+
+    .field-error {
+        color: #b91c1c;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
     @media (max-width: 1100px) {
         .page-hero {
             padding: 92px 0 70px;
@@ -257,27 +282,57 @@
                 <p>Reach out for delivery, refills, or general inquiries.</p>
             </div>
 
-            <form class="contact-form">
+            <form class="contact-form" action="{{ route('contact.submit') }}" method="POST" novalidate>
+                @csrf
+
+                @if(session('contact_success'))
+                    <div class="form-alert success">{{ session('contact_success') }}</div>
+                @endif
+
+                @if(session('contact_error'))
+                    <div class="form-alert error">{{ session('contact_error') }}</div>
+                @endif
+
                 <div class="contact-row">
                     <div class="field">
                         <label for="full_name">Full Name</label>
-                        <input id="full_name" type="text" placeholder="John Doe">
+                        <input id="full_name" name="full_name" type="text" value="{{ old('full_name') }}" placeholder="John Doe" required>
+                        @error('full_name')
+                            <p class="field-error">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div class="field">
                         <label for="email">Email Address</label>
-                        <input id="email" type="email" placeholder="john@example.com">
+                        <input id="email" name="email" type="email" value="{{ old('email') }}" placeholder="john@example.com" required>
+                        @error('email')
+                            <p class="field-error">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 
                 <div class="field">
+                    <label for="phone">Phone Number</label>
+                    <input id="phone" name="phone" type="text" value="{{ old('phone') }}" placeholder="09XXXXXXXXX" required>
+                    @error('phone')
+                        <p class="field-error">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="field">
                     <label for="inquiry">Inquiry Type</label>
-                    <input id="inquiry" type="text" placeholder="Home delivery, refill inquiry, or branch question">
+                    <input id="inquiry" name="inquiry" type="text" value="{{ old('inquiry') }}" placeholder="Home delivery, refill inquiry, or branch question" required>
+                    @error('inquiry')
+                        <p class="field-error">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="field">
                     <label for="message">Message</label>
-                    <textarea id="message" rows="5" placeholder="How can we help you today?"></textarea>
+                    <textarea id="message" name="message" rows="5" placeholder="How can we help you today?" required>{{ old('message') }}</textarea>
+                    @error('message')
+                        <p class="field-error">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <button type="submit" class="nav-cta send-btn">

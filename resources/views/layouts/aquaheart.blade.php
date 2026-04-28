@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
     
     <!-- DotLottie Player (Required for .lottie files) -->
     <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
@@ -598,6 +598,12 @@
                 <div class="nav-label">Management</div>
                 <ul class="nav-list">
                     <li class="nav-item">
+                        <a href="{{ route('aquaheart.messages.index') }}" class="nav-link {{ request()->routeIs('aquaheart.messages.*') ? 'active' : '' }}">
+                            <i data-lucide="mail"></i>
+                            <span>Contact Messages</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a href="{{ route('aquaheart.users.index') }}" class="nav-link {{ request()->routeIs('aquaheart.users.*') ? 'active' : '' }}">
                             <i data-lucide="shield-check"></i>
                             <span>Team Management</span>
@@ -623,7 +629,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="{{ route('aquaheart.support') }}" class="nav-link {{ request()->routeIs('aquaheart.support') ? 'active' : '' }}">
                         <i data-lucide="help-circle"></i>
                         <span>Support</span>
                     </a>
@@ -650,38 +656,40 @@
                 <input type="text" name="search" placeholder="Search inventory items..." value="{{ request('search') }}">
             </form>
             <div class="topbar-right" style="display: flex; align-items: center; gap: 24px;">
-                <a href="#" style="display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 0.85rem;">
+                <a href="{{ route('aquaheart.support') }}" style="display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 0.85rem;">
                     <i data-lucide="help-circle" size="18"></i> Help
                 </a>
-                <button id="quickActionBtn" class="btn-primary" style="padding: 8px 16px; gap: 8px; display: flex; align-items: center; border: none; cursor: pointer;">
-                    <i data-lucide="zap" size="16" style="stroke-width: 2.5;"></i> Quick Action
-                </button>
-                
-                <!-- Quick Action Menu -->
-                <div id="quickActionMenu" class="quick-action-menu" style="display: none;">
-                    <div class="quick-action-item">
-                        <a href="{{ route('aquaheart.refills.create') }}" class="quick-action-link">
-                            <i data-lucide="plus-circle"></i>
-                            <span>New Transaction</span>
-                        </a>
-                    </div>
-                    <div class="quick-action-item">
-                        <a href="{{ route('aquaheart.products.create') }}" class="quick-action-link">
-                            <i data-lucide="package-plus"></i>
-                            <span>Add Product</span>
-                        </a>
-                    </div>
-                    <div class="quick-action-item">
-                        <a href="{{ route('aquaheart.customers.index') }}" class="quick-action-link">
-                            <i data-lucide="user-plus"></i>
-                            <span>View Customers</span>
-                        </a>
-                    </div>
-                    <div class="quick-action-item">
-                        <a href="{{ route('aquaheart.reports.sales') }}" class="quick-action-link">
-                            <i data-lucide="bar-chart-3"></i>
-                            <span>Sales Report</span>
-                        </a>
+                <div style="position: relative;">
+                    <button id="quickActionBtn" class="btn-primary" style="padding: 8px 16px; gap: 8px; display: flex; align-items: center; border: none; cursor: pointer;">
+                        <i data-lucide="zap" size="16" style="stroke-width: 2.5;"></i> Quick Action
+                    </button>
+                    
+                    <!-- Quick Action Menu -->
+                    <div id="quickActionMenu" class="quick-action-menu" style="display: none;">
+                        <div class="quick-action-item">
+                            <a href="{{ route('aquaheart.refills.create') }}" class="quick-action-link">
+                                <i data-lucide="plus-circle"></i>
+                                <span>New Transaction</span>
+                            </a>
+                        </div>
+                        <div class="quick-action-item">
+                            <a href="{{ route('aquaheart.products.create') }}" class="quick-action-link">
+                                <i data-lucide="package-plus"></i>
+                                <span>Add Product</span>
+                            </a>
+                        </div>
+                        <div class="quick-action-item">
+                            <a href="{{ route('aquaheart.customers.index') }}" class="quick-action-link">
+                                <i data-lucide="user-plus"></i>
+                                <span>View Customers</span>
+                            </a>
+                        </div>
+                        <div class="quick-action-item">
+                            <a href="{{ route('aquaheart.reports.sales') }}" class="quick-action-link">
+                                <i data-lucide="bar-chart-3"></i>
+                                <span>Sales Report</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 
@@ -806,7 +814,6 @@
     </script>
 
     <script>
-        lucide.createIcons();
 
         const logoutModal = document.getElementById('logoutModal');
         const logoutForm = document.getElementById('logoutForm');
@@ -992,6 +999,34 @@
                     }
                 }
             });
+        })();
+
+        (function () {
+            const quickActionBtn = document.getElementById('quickActionBtn');
+            const quickActionMenu = document.getElementById('quickActionMenu');
+
+            if (quickActionBtn && quickActionMenu) {
+                quickActionBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const isVisible = quickActionMenu.style.display === 'block';
+                    quickActionMenu.style.display = isVisible ? 'none' : 'block';
+                });
+
+                document.addEventListener('click', function (e) {
+                    if (!quickActionBtn.contains(e.target) && !quickActionMenu.contains(e.target)) {
+                        quickActionMenu.style.display = 'none';
+                    }
+                });
+
+                // Close on escape
+                document.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') {
+                        quickActionMenu.style.display = 'none';
+                    }
+                });
+            }
+            // Initialize Lucide Icons
+            lucide.createIcons();
         })();
     </script>
     @stack('scripts')

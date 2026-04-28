@@ -232,12 +232,24 @@ class RefillController extends Controller
             $payload['refill_date'] = $data['refill_date'];
         }
 
-        if (Schema::hasColumn('refills', 'paid_amount')) {
-            $payload['paid_amount'] = $data['paid_amount'] ?? null;
-        }
-
-        if (Schema::hasColumn('refills', 'partial_amount')) {
-            $payload['partial_amount'] = $data['partial_amount'] ?? null;
+        if (Schema::hasColumn('refills', 'paid_amount') || Schema::hasColumn('refills', 'partial_amount')) {
+            $total = $data['quantity'] * $data['unit_price'];
+            $isPartial = $data['payment_status'] === 'partial';
+            
+            if ($isPartial) {
+                // If partial but no amounts provided, assume 50% paid as fallback or keep as is if one is provided
+                $paid = $data['paid_amount'] ?? ($data['partial_amount'] !== null ? $total - $data['partial_amount'] : $total / 2);
+                $remaining = $data['partial_amount'] ?? ($total - $paid);
+                
+                $payload['paid_amount'] = $paid;
+                $payload['partial_amount'] = $remaining;
+            } else if ($data['payment_status'] === 'paid') {
+                $payload['paid_amount'] = $total;
+                $payload['partial_amount'] = 0;
+            } else {
+                $payload['paid_amount'] = 0;
+                $payload['partial_amount'] = $total;
+            }
         }
 
         return $payload;
@@ -250,36 +262,27 @@ class RefillController extends Controller
         }
 
         $needle = strtolower(trim($value));
-        $candidates = array_values(array_unique([
-            $needle,
-            str_replace(' ', '_', $needle),
-            str_replace('-', '_', $needle),
-            str_replace('_', ' ', $needle),
-            str_replace('-', ' ', $needle),
-            str_replace('_', '-', $needle),
-            str_replace(' ', '-', $needle),
-            ucfirst($needle),
-            ucwords($needle),
-        ]));
-        $query = DB::table($table);
-
-        // Try code column first (case-insensitive)
-        if (Schema::hasColumn($table, 'code')) {
-            $match = $query
-                ->whereRaw('LOWER(code) = ?', [$needle])
-                ->value('id');
-            if ($match !== null) {
-                return (string) $match;
-            }
+        
+        // Add fallback aliases for payment statuses
+        if ($table === 'payment_statuses') {
+            if ($needle === 'partial') $candidates = ['partial', 'pending'];
+            else if ($needle === 'pending') $candidates = ['pending', 'partial'];
+            else $candidates = [$needle];
+        } else {
+            $candidates = [$needle];
         }
 
-        // Try name column (case-insensitive)
-        if (Schema::hasColumn($table, 'name')) {
-            $match = $query
-                ->whereRaw('LOWER(name) = ?', [$needle])
-                ->value('id');
-            if ($match !== null) {
-                return (string) $match;
+        foreach ($candidates as $term) {
+            // Try code column first
+            if (Schema::hasColumn($table, 'code')) {
+                $match = DB::table($table)->whereRaw('LOWER(code) = ?', [$term])->value('id');
+                if ($match !== null) return (string) $match;
+            }
+
+            // Try name column
+            if (Schema::hasColumn($table, 'name')) {
+                $match = DB::table($table)->whereRaw('LOWER(name) = ?', [$term])->value('id');
+                if ($match !== null) return (string) $match;
             }
         }
 
@@ -372,15 +375,30 @@ class RefillController extends Controller
 
     private function setPaymentStatus(Refill $refill, string $status): void
     {
+        $total = ($refill->quantity ?? 0) * ($refill->unit_price ?? 0);
+
+        if (Schema::hasColumn('refills', 'paid_amount')) {
+            if ($status === 'paid') {
+                $refill->paid_amount = $total;
+                $refill->partial_amount = 0;
+            } elseif ($status === 'unpaid') {
+                $refill->paid_amount = 0;
+                $refill->partial_amount = $total;
+            } elseif ($status === 'partial' && ($refill->paid_amount == $total || $refill->paid_amount == 0)) {
+                // If switching to partial from a full state, assume 50% split if not already partially paid
+                $refill->paid_amount = $total / 2;
+                $refill->partial_amount = $total / 2;
+            }
+        }
+
         if (Schema::hasColumn('refills', 'payment_status')) {
             $refill->payment_status = $status;
-            $refill->save();
-            return;
         }
 
         if (Schema::hasColumn('refills', 'payment_status_id')) {
             $refill->payment_status_id = $this->resolveLookupId('payment_statuses', $status);
-            $refill->save();
         }
+
+        $refill->save();
     }
 }
