@@ -304,6 +304,13 @@
             width: 18px;
             height: 18px;
             pointer-events: none;
+            z-index: 2;
+            transition: all 0.2s ease;
+        }
+
+        .input-shell:focus-within svg {
+            color: var(--teal);
+            transform: translateY(calc(-50% - 1px));
         }
 
         .form-control {
@@ -375,9 +382,35 @@
             transition: transform var(--transition), box-shadow var(--transition);
         }
 
+        .submit-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 22px 42px rgba(15, 23, 42, 0.18);
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 0 20px 30px -10px rgba(15, 118, 110, 0.4), 0 10px 15px -5px rgba(15, 23, 42, 0.2);
+            background: linear-gradient(135deg, #1e293b 0%, #0f766e 100%);
+        }
+
+        .submit-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px rgba(15, 118, 110, 0.3);
+        }
+
+        .form-control {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-control:hover {
+            border-color: var(--teal);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px var(--teal-soft);
+        }
+
+        .input-shell:hover svg {
+            color: var(--teal);
+            transform: translateY(-50%) scale(1.1);
+            transition: all 0.25s ease;
         }
 
         .form-footer {
@@ -636,18 +669,20 @@
                 <form method="POST" action="{{ route('login') }}" class="login-form">
                     @csrf
 
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    name="email" 
-                    class="form-control"
-                    value="{{ old('email') }}"
-                    required 
-                    placeholder="admin@aquaheart.com"
-                >
-            </div>
+                    <div class="field">
+                        <label for="email">Email Address</label>
+                        <div class="input-shell">
+                            <i data-lucide="mail" size="18"></i>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                class="form-control"
+                                value="{{ old('email') }}"
+                                required
+                                placeholder="admin@aquaheart.com">
+                        </div>
+                    </div>
 
                     <div class="field">
                         <label for="password">Password</label>

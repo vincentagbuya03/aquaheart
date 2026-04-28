@@ -34,11 +34,23 @@
         ->filter(fn ($refill) => ($refill->paymentStatus?->name ?? strtolower($refill->payment_status ?? '')) === 'unpaid')
         ->sum(fn ($refill) => ((float) ($refill->quantity ?? 0) * (float) ($refill->unit_price ?? 0)) ?: (float) ($refill->amount ?? 0));
     
-    $partialAmount = $sortedRefills
+    // Sum of ONLY the outstanding balances for partial payments
+    $partialBalanceAmount = $sortedRefills
         ->filter(fn ($refill) => ($refill->paymentStatus?->name ?? strtolower($refill->payment_status ?? '')) === 'partial')
-        ->sum(fn ($refill) => ((float) ($refill->quantity ?? 0) * (float) ($refill->unit_price ?? 0)) ?: (float) ($refill->amount ?? 0));
+        ->sum(fn ($refill) => (float) ($refill->partial_amount ?? 0));
+        
+    // Sum of ONLY the amounts ALREADY PAID for partial payments
+    $partialPaidAmount = $sortedRefills
+        ->filter(fn ($refill) => ($refill->paymentStatus?->name ?? strtolower($refill->payment_status ?? '')) === 'partial')
+        ->sum(fn ($refill) => (float) ($refill->paid_amount ?? 0));
     
-    $paidAmount = $totalSpent - $unpaidAmount - $partialAmount;
+    // Correctly calculate total paid: (Fully Paid Records) + (Paid portion of Partial Records)
+    $fullyPaidAmount = $sortedRefills
+        ->filter(fn ($refill) => ($refill->paymentStatus?->name ?? strtolower($refill->payment_status ?? '')) === 'paid')
+        ->sum(fn ($refill) => ((float) ($refill->quantity ?? 0) * (float) ($refill->unit_price ?? 0)) ?: (float) ($refill->amount ?? 0));
+        
+    $paidAmount = $fullyPaidAmount + $partialPaidAmount;
+    $outstandingAmount = $unpaidAmount + $partialBalanceAmount;
 @endphp
 
 <div class="detail-grid">
@@ -58,20 +70,20 @@
     
     <div class="card detail-card">
         <div class="detail-row">
-            <span class="label">Paid</span>
+            <span class="label">Paid Amount</span>
             <strong style="color: #059669;">₱{{ number_format($paidAmount, 2) }}</strong>
         </div>
         <div class="detail-row">
-            <span class="label">Unpaid</span>
+            <span class="label">Partial Balances</span>
+            <strong style="color: #b45309;">₱{{ number_format($partialBalanceAmount, 2) }}</strong>
+        </div>
+        <div class="detail-row">
+            <span class="label">Full Arrears</span>
             <strong style="color: #991b1b;">₱{{ number_format($unpaidAmount, 2) }}</strong>
         </div>
         <div class="detail-row">
-            <span class="label">Partial</span>
-            <strong style="color: #b45309;">₱{{ number_format($partialAmount, 2) }}</strong>
-        </div>
-        <div class="detail-row">
-            <span class="label">Outstanding Balance</span>
-            <strong style="color: {{ ($unpaidAmount + $partialAmount) > 0 ? '#ef4444' : '#059669' }};">₱{{ number_format($unpaidAmount + $partialAmount, 2) }}</strong>
+            <span class="label">Total Outstanding</span>
+            <strong style="color: {{ $outstandingAmount > 0 ? '#ef4444' : '#059669' }};">₱{{ number_format($outstandingAmount, 2) }}</strong>
         </div>
     </div>
 </div>

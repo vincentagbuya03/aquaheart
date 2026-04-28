@@ -84,7 +84,7 @@
                     <td>{{ optional($refill->created_at)->format('M d, Y') ?? 'N/A' }}</td>
                     <td>{{ $refill->customer->name ?? 'N/A' }}</td>
                     <td>{{ $refill->product->name ?? 'Standard' }}</td>
-                    <td>{{ ucfirst(str_replace('_', ' ', $refill->payment_status_label ?? 'paid')) }}</td>
+                    <td>{{ ucfirst(str_replace('_', ' ', $refill->computed_payment_status)) }}</td>
                     <td class="amt-cell">PHP {{ number_format(($refill->quantity ?? 0) * ($refill->unit_price ?? 0), 2) }}</td>
                 </tr>
             @endforeach

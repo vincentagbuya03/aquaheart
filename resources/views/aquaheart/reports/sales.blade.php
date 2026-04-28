@@ -47,8 +47,9 @@
         </div>
         <div class="logs-status-chips" role="tablist" aria-label="Log status filter">
             <button type="button" class="log-chip active" data-status="all">All</button>
-            <button type="button" class="log-chip" data-status="completed">Completed</button>
-            <button type="button" class="log-chip" data-status="pending">Pending</button>
+            <button type="button" class="log-chip" data-status="paid">Paid</button>
+            <button type="button" class="log-chip" data-status="partial">Partial</button>
+            <button type="button" class="log-chip" data-status="unpaid">Unpaid</button>
         </div>
     </div>
     <div class="filter-actions">
@@ -80,7 +81,7 @@
             <tbody>
                 @foreach($recentTransactions as $transaction)
                 @php
-                    $txnStatus = strtolower($transaction->payment_status ?? 'completed');
+                    $txnStatus = strtolower($transaction->computed_payment_status);
                     $txnCustomer = strtolower($transaction->customer->name ?? 'guest');
                     $txnRef = strtolower(substr($transaction->id, 0, 5));
                 @endphp
@@ -95,8 +96,8 @@
                     <td class="quantity-cell">{{ number_format($transaction->quantity, 1) }} Gal</td>
                     <td class="price-cell">PHP {{ number_format($transaction->quantity * $transaction->unit_price, 2) }}</td>
                     <td>
-                        <span class="status-pill {{ strtolower($transaction->payment_status ?? 'completed') }}">
-                            {{ strtoupper($transaction->payment_status ?? 'COMPLETED') }}
+                        <span class="status-pill {{ $txnStatus }}">
+                            {{ strtoupper($txnStatus) }}
                         </span>
                     </td>
                 </tr>
@@ -171,8 +172,9 @@
     .quantity-cell { font-weight: 700; color: var(--text-main); font-size: 0.9rem; }
     .price-cell { font-weight: 800; color: var(--primary); font-size: 1rem; }
     .status-pill { padding: 4px 12px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; }
-    .status-pill.completed { background: #dcfce7; color: #166534; }
-    .status-pill.pending { background: #fef3c7; color: #b45309; }
+    .status-pill.paid { background: #dcfce7; color: #166534; }
+    .status-pill.partial { background: #fef3c7; color: #b45309; }
+    .status-pill.unpaid { background: #fee2e2; color: #b91c1c; }
     .logs-empty-state { text-align: center; color: #64748b; font-weight: 600; padding: 28px 16px; }
     
     .table-footer { padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; }

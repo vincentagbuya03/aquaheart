@@ -5,23 +5,34 @@
 @section('page_subtitle', 'Review customer, product, payment, and service information for this record.')
 
 @section('page_actions')
+@if(auth()->user()->is_admin)
 <a href="{{ route('aquaheart.refills.edit', $refill) }}" class="btn-primary">
     <i data-lucide="edit-2" size="18"></i>
     Edit Transaction
 </a>
+@endif
 @endsection
 
 @section('content')
+@php
+    $status = $refill->computed_payment_status;
+@endphp
 <div class="detail-grid">
     <div class="card detail-card">
-        <div class="detail-row"><span class="label">Customer</span><strong>{{ $refill->customer->name }}</strong></div>
-        <div class="detail-row"><span class="label">Product</span><strong>{{ $refill->product->name ?? 'Unknown Product' }}</strong></div>
+        <div class="detail-row"><span class="label">Customer</span><strong>{{ $refill->customer?->name ?? 'Walk-in Guest' }}</strong></div>
+        <div class="detail-row"><span class="label">Product</span><strong>{{ $refill->product?->name ?? 'Unknown Product' }}</strong></div>
         <div class="detail-row"><span class="label">Quantity</span><strong>{{ $refill->quantity }}</strong></div>
         <div class="detail-row"><span class="label">Unit Price</span><strong>PHP {{ number_format($refill->unit_price, 2) }}</strong></div>
         <div class="detail-row"><span class="label">Total Amount</span><strong>PHP {{ number_format(($refill->quantity ?? 0) * ($refill->unit_price ?? 0), 2) }}</strong></div>
     </div>
     <div class="card detail-card">
-        <div class="detail-row"><span class="label">Payment Status</span><strong>{{ ucfirst($refill->payment_status ?? 'paid') }}</strong></div>
+        <div class="detail-row"><span class="label">Payment Status</span><strong>{{ ucfirst($status) }}</strong></div>
+        
+        @if($status === 'partial')
+            <div class="detail-row"><span class="label">Paid Amount</span><strong>PHP {{ number_format($refill->paid_amount ?? 0, 2) }}</strong></div>
+            <div class="detail-row"><span class="label">Outstanding Balance</span><strong style="color: #dc2626;">PHP {{ number_format($refill->partial_amount ?? 0, 2) }}</strong></div>
+        @endif
+
         <div class="detail-row"><span class="label">Service Type</span><strong>{{ ucfirst(str_replace('_', ' ', $refill->service_type ?? 'walk_in')) }}</strong></div>
         <div class="detail-row"><span class="label">Refill Date</span><strong>{{ optional($refill->refill_date)->format('M d, Y') ?? optional($refill->created_at)->format('M d, Y') ?? 'N/A' }}</strong></div>
         <div class="detail-row"><span class="label">Recorded At</span><strong>{{ optional($refill->created_at)->format('M d, Y h:i A') ?? 'N/A' }}</strong></div>

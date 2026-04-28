@@ -72,6 +72,13 @@
             </thead>
             <tbody>
                 @forelse ($refills as $refill)
+                @php
+                    $status = $refill->computed_payment_status;
+                    $isPartial = $status === 'partial';
+                    $total = $refill->total_amount;
+                    $paid = $refill->paid_amount ?? ($status === 'paid' ? $total : 0);
+                    $balance = $refill->partial_amount ?? max(0, $total - $paid);
+                @endphp
                 <tr>
                     <td>
                         <div class="receipt-cell">
@@ -102,15 +109,19 @@
                     </td>
                     <td>
                         <div class="payment-action">
-                            <form method="POST" action="{{ route('aquaheart.refills.payment-status.update', $refill) }}" class="status-form">
-                                @csrf
-                                @method('PATCH')
-                                <select name="payment_status" class="status-dropdown {{ $refill->payment_status ?? 'paid' }}" onchange="this.form.submit()">
-                                    <option value="paid" {{ ($refill->payment_status ?? 'paid') === 'paid' ? 'selected' : '' }}>Paid</option>
-                                    <option value="unpaid" {{ ($refill->payment_status ?? 'paid') === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
-                                    <option value="partial" {{ ($refill->payment_status ?? 'paid') === 'partial' ? 'selected' : '' }}>Partial</option>
-                                </select>
-                            </form>
+                            @if(auth()->user()->is_admin)
+                                <form method="POST" action="{{ route('aquaheart.refills.payment-status.update', $refill) }}" class="status-form">
+                                    @csrf
+                                    @method('PATCH')
+                                    <select name="payment_status" class="status-dropdown {{ $status }}" onchange="this.form.submit()">
+                                        <option value="paid" {{ $status === 'paid' ? 'selected' : '' }}>Paid</option>
+                                        <option value="unpaid" {{ $status === 'unpaid' ? 'selected' : '' }}>Unpaid</option>
+                                        <option value="partial" {{ $status === 'partial' ? 'selected' : '' }}>Partial</option>
+                                    </select>
+                                </form>
+                            @else
+                                <span class="status-badge {{ $status }}">{{ ucfirst($status) }}</span>
+                            @endif
                         </div>
                     </td>
                     <td>
@@ -119,16 +130,21 @@
                                 <span class="currency">PHP</span>
                                 <span class="value">{{ number_format($refill->total_amount ?? ($refill->quantity * $refill->unit_price), 2) }}</span>
                             </div>
-                            @if(($refill->payment_status ?? '') === 'partial' && ($refill->partial_amount > 0 || $refill->paid_amount > 0))
-                                <div class="partial-info">
-                                    <div class="progress-bar">
-                                        @php
-                                            $total = $refill->total_amount ?? ($refill->quantity * $refill->unit_price);
-                                            $percent = $total > 0 ? min(100, ($refill->paid_amount / $total) * 100) : 0;
-                                        @endphp
+                            
+                            @if($isPartial)
+                                <div class="financial-breakdown">
+                                    <div class="breakdown-item paid">
+                                        <span class="label">Paid:</span>
+                                        <span class="amt">₱{{ number_format($paid, 2) }}</span>
+                                    </div>
+                                    <div class="breakdown-item balance">
+                                        <span class="label">Bal:</span>
+                                        <span class="amt">₱{{ number_format($balance, 2) }}</span>
+                                    </div>
+                                    <div class="progress-mini">
+                                        @php $percent = $total > 0 ? min(100, ($paid / $total) * 100) : 0; @endphp
                                         <div class="progress-fill" style="width: {{ $percent }}%"></div>
                                     </div>
-                                    <span class="balance">Balance: PHP {{ number_format($refill->partial_amount ?? ($total - $refill->paid_amount), 2) }}</span>
                                 </div>
                             @endif
                         </div>
@@ -136,12 +152,15 @@
                     <td class="text-right">
                         <div class="action-group">
                             <a href="{{ route('aquaheart.refills.show', $refill) }}" class="act-btn" title="View Details"><i data-lucide="eye"></i></a>
-                            <a href="{{ route('aquaheart.refills.edit', $refill) }}" class="act-btn" title="Edit"><i data-lucide="edit-3"></i></a>
-                            <form method="POST" action="{{ route('aquaheart.refills.destroy', $refill) }}" style="display: inline;" data-ajax-delete data-delete-label="transaction {{ $refill->receipt_number }}">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="act-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>
-                            </form>
+                            
+                            @if(auth()->user()->is_admin)
+                                <a href="{{ route('aquaheart.refills.edit', $refill) }}" class="act-btn" title="Edit"><i data-lucide="edit-3"></i></a>
+                                <form method="POST" action="{{ route('aquaheart.refills.destroy', $refill) }}" style="display: inline;" data-ajax-delete data-delete-label="transaction {{ $refill->receipt_number }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="act-btn delete" title="Delete"><i data-lucide="trash-2"></i></button>
+                                </form>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -227,16 +246,26 @@
     .status-dropdown.paid { background: #dcfce7; color: #166534; }
     .status-dropdown.unpaid { background: #fee2e2; color: #b91c1c; }
     .status-dropdown.partial { background: #fef3c7; color: #b45309; }
+    
+    .status-badge { padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; display: inline-block; }
+    .status-badge.paid { background: #dcfce7; color: #166534; }
+    .status-badge.unpaid { background: #fee2e2; color: #b91c1c; }
+    .status-badge.partial { background: #fef3c7; color: #b45309; }
 
-    .amount-cell { display: flex; flex-direction: column; gap: 4px; }
+    .amount-cell { display: flex; flex-direction: column; gap: 6px; }
     .amount-cell .total-row { display: flex; align-items: baseline; gap: 4px; }
-    .amount-cell .currency { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); }
-    .amount-cell .value { font-size: 1.1rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+    .amount-cell .currency { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
+    .amount-cell .value { font-size: 1rem; font-weight: 800; color: var(--primary); }
 
-    .partial-info { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
-    .progress-bar { width: 100px; height: 4px; background: #f1f5f9; border-radius: 2px; overflow: hidden; }
-    .progress-fill { height: 100%; background: #f59e0b; border-radius: 2px; }
-    .balance { font-size: 0.7rem; font-weight: 700; color: #b45309; }
+    .financial-breakdown { display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 4px; }
+    .breakdown-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.72rem; }
+    .breakdown-item .label { font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.65rem; }
+    .breakdown-item .amt { font-weight: 800; }
+    .breakdown-item.paid .amt { color: #166534; }
+    .breakdown-item.balance .amt { color: #b45309; }
+    
+    .progress-mini { height: 4px; background: #e2e8f0; border-radius: 2px; overflow: hidden; margin-top: 2px; }
+    .progress-mini .progress-fill { height: 100%; background: #f59e0b; border-radius: 2px; }
 
     .action-group { display: flex; gap: 8px; justify-content: flex-end; }
     .act-btn { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #64748b; background: #f8fafc; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s; }

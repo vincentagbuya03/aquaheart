@@ -14,7 +14,7 @@ class RefillController extends Controller
     public function index()
     {
         $statusFilter = trim((string) request('status', ''));
-        $query = Refill::with(['customer', 'product', 'user']);
+        $query = Refill::with(['customer', 'product', 'user', 'paymentStatus'])->select('refills.*');
         
         if (!auth()->user()->is_admin) {
             $query->where('user_id', auth()->id());
@@ -96,14 +96,14 @@ class RefillController extends Controller
             abort(403, 'Unauthorized access to this transaction.');
         }
 
-        $refill->load(['customer', 'product', 'user']);
+        $refill->load(['customer', 'product', 'user', 'paymentStatus']);
         return view('aquaheart.refills.show', compact('refill'));
     }
 
     public function edit(Refill $refill)
     {
-        if (!auth()->user()->is_admin && $refill->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized access to this transaction.');
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Cashiers are not permitted to modify recorded transactions.');
         }
 
         $customers = Customer::orderBy('name')->get();
@@ -113,6 +113,10 @@ class RefillController extends Controller
 
     public function update(Request $request, Refill $refill)
     {
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Cashiers are not permitted to modify recorded transactions.');
+        }
+
         $data = $request->validate([
             'customer_name' => 'required|string|max:255',
             'customer_id' => 'nullable|exists:customers,id',
@@ -150,10 +154,6 @@ class RefillController extends Controller
         $availableStock = (string) $previousProductId === (string) $data['product_id']
             ? $requestedProduct->stock_quantity + $previousQuantity
             : $requestedProduct->stock_quantity;
-
-        if (!auth()->user()->is_admin && $refill->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized access to this transaction.');
-        }
 
         if ($availableStock < $data['quantity']) {
             return back()
@@ -291,8 +291,8 @@ class RefillController extends Controller
 
     public function destroy(Refill $refill)
     {
-        if (!auth()->user()->is_admin && $refill->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized access to this transaction.');
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Cashiers are not permitted to delete transactions.');
         }
 
         Product::whereKey($refill->product_id)->increment('stock_quantity', $refill->quantity ?? 0);
@@ -310,8 +310,8 @@ class RefillController extends Controller
 
     public function updatePaymentStatus(Request $request, Refill $refill)
     {
-        if (!auth()->user()->is_admin && $refill->user_id !== auth()->id()) {
-            abort(403, 'Unauthorized access to this transaction.');
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Cashiers are not permitted to modify transaction statuses.');
         }
 
         $data = $request->validate([
@@ -335,8 +335,32 @@ class RefillController extends Controller
             return;
         }
 
+        if (Schema::hasColumn('refills', 'paid_amount') && Schema::hasColumn('refills', 'partial_amount')) {
+            $status = strtolower($status);
+
+            $query->where(function ($innerQuery) use ($status) {
+                $this->applyDerivedPaymentStatusFilter($innerQuery, $status);
+
+                $innerQuery->orWhere(function ($fallbackQuery) use ($status) {
+                    $fallbackQuery->whereNull('refills.paid_amount')
+                        ->whereNull('refills.partial_amount');
+
+                    $this->applyStoredPaymentStatusFilter($fallbackQuery, $status);
+                });
+            });
+
+            return;
+        }
+
+        $this->applyStoredPaymentStatusFilter($query, $status);
+    }
+
+    private function applyStoredPaymentStatusFilter($query, string $status): void
+    {
+        $status = strtolower($status);
+
         if (Schema::hasColumn('refills', 'payment_status')) {
-            $query->whereRaw('LOWER(payment_status) = ?', [strtolower($status)]);
+            $query->whereRaw('LOWER(refills.payment_status) = ?', [$status]);
             return;
         }
 
@@ -344,15 +368,39 @@ class RefillController extends Controller
             return;
         }
 
-        $query->leftJoin('payment_statuses', 'payment_statuses.id', '=', 'refills.payment_status_id');
-
         if (Schema::hasColumn('payment_statuses', 'code')) {
-            $query->whereRaw('LOWER(payment_statuses.code) = ?', [strtolower($status)]);
+            $query->whereHas('paymentStatus', function ($paymentStatusQuery) use ($status) {
+                $paymentStatusQuery->whereRaw('LOWER(code) = ?', [$status]);
+            });
             return;
         }
 
         if (Schema::hasColumn('payment_statuses', 'name')) {
-            $query->whereRaw('LOWER(payment_statuses.name) = ?', [strtolower(str_replace('_', ' ', $status))]);
+            $query->whereHas('paymentStatus', function ($paymentStatusQuery) use ($status) {
+                $paymentStatusQuery->whereRaw('LOWER(name) = ?', [strtolower(str_replace('_', ' ', $status))]);
+            });
+        }
+    }
+
+    private function applyDerivedPaymentStatusFilter($query, string $status): void
+    {
+        $totalExpression = '(COALESCE(refills.quantity, 0) * COALESCE(refills.unit_price, 0))';
+
+        if ($status === 'partial') {
+            $query->whereRaw('COALESCE(refills.paid_amount, 0) > 0')
+                ->whereRaw('COALESCE(refills.partial_amount, 0) > 0');
+            return;
+        }
+
+        if ($status === 'paid') {
+            $query->whereRaw('COALESCE(refills.partial_amount, 0) <= 0')
+                ->whereRaw('COALESCE(refills.paid_amount, 0) >= ' . $totalExpression);
+            return;
+        }
+
+        if ($status === 'unpaid') {
+            $query->whereRaw('COALESCE(refills.paid_amount, 0) <= 0')
+                ->whereRaw('COALESCE(refills.partial_amount, 0) > 0');
         }
     }
 

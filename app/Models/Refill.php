@@ -33,6 +33,8 @@ class Refill extends Model
         'quantity' => 'integer',
         'unit_price' => 'decimal:2',
         'amount' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+        'partial_amount' => 'decimal:2',
     ];
 
     public function user()
@@ -60,8 +62,36 @@ class Refill extends Model
         return $this->belongsTo(PaymentStatus::class);
     }
 
-    public function getPaymentStatusAttribute()
+    public function getTotalAmountAttribute(): float
     {
-        return strtolower($this->paymentStatus->name ?? 'paid');
+        return (float) (($this->quantity ?? 0) * ($this->unit_price ?? 0));
     }
+
+    public function getComputedPaymentStatusAttribute(): string
+    {
+        $total = $this->total_amount;
+        $paid = $this->paid_amount !== null ? (float) $this->paid_amount : null;
+        $balance = $this->partial_amount !== null ? (float) $this->partial_amount : null;
+        $epsilon = 0.00001;
+
+        if ($paid !== null || $balance !== null) {
+            $paidValue = max(0, $paid ?? 0);
+            $balanceValue = max(0, $balance ?? max(0, $total - $paidValue));
+
+            if ($paidValue > $epsilon && $balanceValue > $epsilon) {
+                return 'partial';
+            }
+
+            if ($balanceValue <= $epsilon && $paidValue + $epsilon >= $total) {
+                return 'paid';
+            }
+
+            if ($paidValue <= $epsilon && $balanceValue > $epsilon) {
+                return 'unpaid';
+            }
+        }
+
+        return strtolower($this->payment_status ?? $this->paymentStatus?->code ?? 'paid');
+    }
+
 }

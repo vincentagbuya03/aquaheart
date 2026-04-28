@@ -27,17 +27,5 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        User::firstOrCreate(
-            ['email' => 'manager@aquaheart.com'],
-            [
-                'name' => 'Manager',
-                'password' => bcrypt('password123'),
-                'is_admin' => true,
-                'email_verified_at' => now(),
-            ]
-        );
-
-        // Create water bottle products
-
     }
 }

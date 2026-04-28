@@ -150,16 +150,8 @@ class ReportController extends Controller
             ->select('refills.*')
             ->orderBy('refills.created_at', 'desc');
 
-        if (Schema::hasColumn('refills', 'payment_status')) {
-            $refillsQuery->addSelect('refills.payment_status as payment_status_label');
-        } elseif (Schema::hasColumn('refills', 'payment_status_id')) {
+        if (!Schema::hasColumn('refills', 'payment_status') && Schema::hasColumn('refills', 'payment_status_id')) {
             $refillsQuery->leftJoin('payment_statuses', 'payment_statuses.id', '=', 'refills.payment_status_id');
-
-            if (Schema::hasColumn('payment_statuses', 'code')) {
-                $refillsQuery->addSelect('payment_statuses.code as payment_status_label');
-            } elseif (Schema::hasColumn('payment_statuses', 'name')) {
-                $refillsQuery->addSelect(DB::raw("LOWER(REPLACE(payment_statuses.name, ' ', '_')) as payment_status_label"));
-            }
         }
 
         if (Schema::hasColumn('refills', 'service_type')) {
@@ -202,7 +194,7 @@ class ReportController extends Controller
                     $refill->product->name ?? 'N/A',
                     $refill->quantity,
                     $refill->service_type_label ?? 'walk_in',
-                    $refill->payment_status_label ?? 'paid',
+                    $refill->computed_payment_status,
                     'PHP ' . number_format($lineAmount, 2),
                 ]);
             }
@@ -304,16 +296,8 @@ class ReportController extends Controller
             ->select('refills.*')
             ->orderBy('refills.created_at', 'desc');
 
-        if (Schema::hasColumn('refills', 'payment_status')) {
-            $refillsQuery->addSelect('refills.payment_status as payment_status_label');
-        } elseif (Schema::hasColumn('refills', 'payment_status_id')) {
+        if (!Schema::hasColumn('refills', 'payment_status') && Schema::hasColumn('refills', 'payment_status_id')) {
             $refillsQuery->leftJoin('payment_statuses', 'payment_statuses.id', '=', 'refills.payment_status_id');
-
-            if (Schema::hasColumn('payment_statuses', 'code')) {
-                $refillsQuery->addSelect('payment_statuses.code as payment_status_label');
-            } elseif (Schema::hasColumn('payment_statuses', 'name')) {
-                $refillsQuery->addSelect(DB::raw("LOWER(REPLACE(payment_statuses.name, ' ', '_')) as payment_status_label"));
-            }
         }
 
         $refills = $refillsQuery->get();
@@ -323,25 +307,28 @@ class ReportController extends Controller
 
     private function countTransactionsByPaymentStatus(string $status): int
     {
-        if (Schema::hasColumn('refills', 'payment_status')) {
-            return Refill::whereRaw('LOWER(payment_status) = ?', [strtolower($status)])->count();
+        $query = Refill::query();
+
+        if (Schema::hasColumn('refills', 'paid_amount') && Schema::hasColumn('refills', 'partial_amount')) {
+            $status = strtolower($status);
+
+            $query->where(function ($innerQuery) use ($status) {
+                $this->applyDerivedPaymentStatusFilter($innerQuery, $status);
+
+                $innerQuery->orWhere(function ($fallbackQuery) use ($status) {
+                    $fallbackQuery->whereNull('refills.paid_amount')
+                        ->whereNull('refills.partial_amount');
+
+                    $this->applyStoredPaymentStatusFilter($fallbackQuery, $status);
+                });
+            });
+
+            return $query->count();
         }
 
-        if (!Schema::hasColumn('refills', 'payment_status_id')) {
-            return 0;
-        }
+        $this->applyStoredPaymentStatusFilter($query, $status);
 
-        $query = Refill::query()->leftJoin('payment_statuses', 'payment_statuses.id', '=', 'refills.payment_status_id');
-
-        if (Schema::hasColumn('payment_statuses', 'code')) {
-            return $query->whereRaw('LOWER(payment_statuses.code) = ?', [strtolower($status)])->count();
-        }
-
-        if (Schema::hasColumn('payment_statuses', 'name')) {
-            return $query->whereRaw('LOWER(payment_statuses.name) = ?', [strtolower(str_replace('_', ' ', $status))])->count();
-        }
-
-        return 0;
+        return $query->count();
     }
 
     private function countTransactionsByServiceType(string $serviceType): int
@@ -365,6 +352,62 @@ class ReportController extends Controller
         }
 
         return 0;
+    }
+
+    private function applyStoredPaymentStatusFilter($query, string $status): void
+    {
+        $status = strtolower($status);
+
+        if (Schema::hasColumn('refills', 'payment_status')) {
+            $query->whereRaw('LOWER(refills.payment_status) = ?', [$status]);
+            return;
+        }
+
+        if (!Schema::hasColumn('refills', 'payment_status_id')) {
+            $query->whereRaw('1 = 0');
+            return;
+        }
+
+        if (Schema::hasColumn('payment_statuses', 'code')) {
+            $query->whereHas('paymentStatus', function ($paymentStatusQuery) use ($status) {
+                $paymentStatusQuery->whereRaw('LOWER(code) = ?', [$status]);
+            });
+            return;
+        }
+
+        if (Schema::hasColumn('payment_statuses', 'name')) {
+            $query->whereHas('paymentStatus', function ($paymentStatusQuery) use ($status) {
+                $paymentStatusQuery->whereRaw('LOWER(name) = ?', [strtolower(str_replace('_', ' ', $status))]);
+            });
+            return;
+        }
+
+        $query->whereRaw('1 = 0');
+    }
+
+    private function applyDerivedPaymentStatusFilter($query, string $status): void
+    {
+        $totalExpression = '(COALESCE(refills.quantity, 0) * COALESCE(refills.unit_price, 0))';
+
+        if ($status === 'partial') {
+            $query->whereRaw('COALESCE(refills.paid_amount, 0) > 0')
+                ->whereRaw('COALESCE(refills.partial_amount, 0) > 0');
+            return;
+        }
+
+        if ($status === 'paid') {
+            $query->whereRaw('COALESCE(refills.partial_amount, 0) <= 0')
+                ->whereRaw('COALESCE(refills.paid_amount, 0) >= ' . $totalExpression);
+            return;
+        }
+
+        if ($status === 'unpaid') {
+            $query->whereRaw('COALESCE(refills.paid_amount, 0) <= 0')
+                ->whereRaw('COALESCE(refills.partial_amount, 0) > 0');
+            return;
+        }
+
+        $query->whereRaw('1 = 0');
     }
     
     /**

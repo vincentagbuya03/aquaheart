@@ -562,6 +562,8 @@
                         <span>Dashboard</span>
                     </a>
                 </li>
+                
+                @if(auth()->user()->is_admin)
                 <li class="nav-item">
                     <a href="{{ route('aquaheart.reports.sales') }}" class="nav-link {{ request()->routeIs('aquaheart.reports.sales') ? 'active' : '' }}">
                         <i data-lucide="bar-chart-3"></i>
@@ -574,6 +576,8 @@
                         <span>Inventory</span>
                     </a>
                 </li>
+                @endif
+
                 <li class="nav-item">
                     <a href="{{ route('aquaheart.customers.index') }}" class="nav-link {{ request()->routeIs('aquaheart.customers.*') ? 'active' : '' }}">
                         <i data-lucide="users"></i>
@@ -586,12 +590,15 @@
                         <span>Transaction Logs</span>
                     </a>
                 </li>
+                
+                @if(auth()->user()->is_admin)
                 <li class="nav-item">
                     <a href="{{ route('aquaheart.logs.index') }}" class="nav-link {{ request()->routeIs('aquaheart.logs.*') ? 'active' : '' }}">
                         <i data-lucide="history"></i>
                         <span>Activity Logs</span>
                     </a>
                 </li>
+                @endif
             </ul>
 
             @if(auth()->user()->is_admin)
@@ -651,10 +658,17 @@
 
     <main class="main">
         <div class="topbar">
+            @if(auth()->user()->is_admin)
             <form action="{{ route('aquaheart.products.index') }}" method="GET" class="search">
                 <i data-lucide="search" size="16" style="color: #94a3b8;"></i>
                 <input type="text" name="search" placeholder="Search inventory items..." value="{{ request('search') }}">
             </form>
+            @else
+            <form action="{{ route('aquaheart.refills.index') }}" method="GET" class="search">
+                <i data-lucide="search" size="16" style="color: #94a3b8;"></i>
+                <input type="text" name="search" placeholder="Search your transactions..." value="{{ request('search') }}">
+            </form>
+            @endif
             <div class="topbar-right" style="display: flex; align-items: center; gap: 24px;">
                 <a href="{{ route('aquaheart.support') }}" style="display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 0.85rem;">
                     <i data-lucide="help-circle" size="18"></i> Help
@@ -672,24 +686,31 @@
                                 <span>New Transaction</span>
                             </a>
                         </div>
+                        
+                        @if(auth()->user()->is_admin)
                         <div class="quick-action-item">
                             <a href="{{ route('aquaheart.products.create') }}" class="quick-action-link">
                                 <i data-lucide="package-plus"></i>
                                 <span>Add Product</span>
                             </a>
                         </div>
+                        @endif
+
                         <div class="quick-action-item">
                             <a href="{{ route('aquaheart.customers.index') }}" class="quick-action-link">
                                 <i data-lucide="user-plus"></i>
                                 <span>View Customers</span>
                             </a>
                         </div>
+
+                        @if(auth()->user()->is_admin)
                         <div class="quick-action-item">
                             <a href="{{ route('aquaheart.reports.sales') }}" class="quick-action-link">
                                 <i data-lucide="bar-chart-3"></i>
                                 <span>Sales Report</span>
                             </a>
                         </div>
+                        @endif
                     </div>
                 </div>
                 

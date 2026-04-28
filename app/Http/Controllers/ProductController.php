@@ -9,6 +9,10 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Only administrators can manage inventory.');
+        }
+
         $query = Product::query();
         
         if ($request->filled('search')) {
@@ -73,6 +77,10 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
+        if (!auth()->user()->is_admin) {
+            abort(403, 'Only administrators can view product details.');
+        }
+
         $product->loadCount('refills');
 
         return view('aquaheart.products.show', compact('product'));

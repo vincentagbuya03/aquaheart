@@ -10,30 +10,44 @@ class CashierDashboardController extends Controller
 {
     public function index()
     {
-        // Today's sales
+        $userId = auth()->id();
+
+        // Today's sales (Personal)
         $todayRevenue = (float) Refill::query()
+            ->where('user_id', $userId)
             ->whereDate('created_at', Carbon::today())
             ->selectRaw('COALESCE(SUM(quantity * unit_price), 0) as total')
             ->value('total');
-        $todayTransactions = Refill::whereDate('created_at', Carbon::today())->count();
+        $todayTransactionsCount = Refill::where('user_id', $userId)
+            ->whereDate('created_at', Carbon::today())
+            ->count();
 
-        // Total sales (all time)
+        // Total sales (Personal - all time)
         $totalRevenue = (float) Refill::query()
+            ->where('user_id', $userId)
             ->selectRaw('COALESCE(SUM(quantity * unit_price), 0) as total')
             ->value('total');
-        $totalTransactions = Refill::count();
+        $totalTransactionsCount = Refill::where('user_id', $userId)->count();
 
-        // Monthly sales data for chart (last 12 months)
-        $monthlySales = $this->getMonthlySalesData();
+        // Recent Transactions (Personal)
+        $recentTransactions = Refill::with(['customer', 'product'])
+            ->where('user_id', $userId)
+            ->latest()
+            ->take(5)
+            ->get();
 
-        // Daily sales data for last 30 days
-        $dailySalesData = $this->getDailySalesData();
+        // Monthly sales data for chart (last 12 months - Personal)
+        $monthlySales = $this->getMonthlySalesData($userId);
+
+        // Daily sales data for last 30 days (Personal)
+        $dailySalesData = $this->getDailySalesData($userId);
 
         return view('aquaheart.cashier.dashboard', [
             'todayRevenue' => $todayRevenue,
-            'todayTransactions' => $todayTransactions,
+            'todayTransactions' => $todayTransactionsCount,
             'totalRevenue' => $totalRevenue,
-            'totalTransactions' => $totalTransactions,
+            'totalTransactions' => $totalTransactionsCount,
+            'recentTransactions' => $recentTransactions,
             'monthlySalesData' => $monthlySales['data'],
             'monthlySalesLabels' => $monthlySales['labels'],
             'dailySalesData' => $dailySalesData['data'],
@@ -41,7 +55,7 @@ class CashierDashboardController extends Controller
         ]);
     }
 
-    private function getMonthlySalesData()
+    private function getMonthlySalesData($userId)
     {
         $months = [];
         $data = [];
@@ -51,6 +65,7 @@ class CashierDashboardController extends Controller
             $months[] = $date->format('M Y');
             
             $revenue = (float) Refill::query()
+                ->where('user_id', $userId)
                 ->whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)
                 ->selectRaw('COALESCE(SUM(quantity * unit_price), 0) as total')
@@ -65,7 +80,7 @@ class CashierDashboardController extends Controller
         ];
     }
 
-    private function getDailySalesData()
+    private function getDailySalesData($userId)
     {
         $days = [];
         $data = [];
@@ -75,6 +90,7 @@ class CashierDashboardController extends Controller
             $days[] = $date->format('M d');
             
             $revenue = (float) Refill::query()
+                ->where('user_id', $userId)
                 ->whereDate('created_at', $date)
                 ->selectRaw('COALESCE(SUM(quantity * unit_price), 0) as total')
                 ->value('total');
