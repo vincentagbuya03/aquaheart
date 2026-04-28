@@ -14,7 +14,7 @@
         <div class="metric-info">
             <span class="metric-label">TOTAL SALES TODAY</span>
             <div class="metric-value-row">
-                <span class="metric-value">${{ number_format($todaySales, 2) }}</span>
+                <span class="metric-value">₱{{ number_format($todaySales, 2) }}</span>
             </div>
             <div class="metric-trend {{ $salesTrendPercent >= 0 ? 'trend-up' : 'trend-down' }}">
                 <i data-lucide="{{ $salesTrendPercent >= 0 ? 'trending-up' : 'trending-down' }}"></i>
@@ -121,7 +121,7 @@
                         </span>
                     </td>
                     <td class="text-right total-cell">
-                        ${{ number_format($transaction->quantity * $transaction->unit_price, 2) }}
+                        ₱{{ number_format($transaction->quantity * $transaction->unit_price, 2) }}
                     </td>
                 </tr>
                 @endforeach
@@ -233,7 +233,7 @@
             data: {
                 labels: @json($chartLabels),
                 datasets: [{
-                    label: 'Sales ($)',
+                    label: 'Sales (₱)',
                     data: @json($chartValues),
                     backgroundColor: @json($chartColors),
                     borderRadius: 8,

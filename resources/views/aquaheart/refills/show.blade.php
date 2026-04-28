@@ -22,15 +22,15 @@
         <div class="detail-row"><span class="label">Customer</span><strong>{{ $refill->customer?->name ?? 'Walk-in Guest' }}</strong></div>
         <div class="detail-row"><span class="label">Product</span><strong>{{ $refill->product?->name ?? 'Unknown Product' }}</strong></div>
         <div class="detail-row"><span class="label">Quantity</span><strong>{{ $refill->quantity }}</strong></div>
-        <div class="detail-row"><span class="label">Unit Price</span><strong>PHP {{ number_format($refill->unit_price, 2) }}</strong></div>
-        <div class="detail-row"><span class="label">Total Amount</span><strong>PHP {{ number_format(($refill->quantity ?? 0) * ($refill->unit_price ?? 0), 2) }}</strong></div>
+        <div class="detail-row"><span class="label">Unit Price</span><strong>₱ {{ number_format($refill->unit_price, 2) }}</strong></div>
+        <div class="detail-row"><span class="label">Total Amount</span><strong>₱ {{ number_format(($refill->quantity ?? 0) * ($refill->unit_price ?? 0), 2) }}</strong></div>
     </div>
     <div class="card detail-card">
         <div class="detail-row"><span class="label">Payment Status</span><strong>{{ ucfirst($status) }}</strong></div>
         
         @if($status === 'partial')
-            <div class="detail-row"><span class="label">Paid Amount</span><strong>PHP {{ number_format($refill->paid_amount ?? 0, 2) }}</strong></div>
-            <div class="detail-row"><span class="label">Outstanding Balance</span><strong style="color: #dc2626;">PHP {{ number_format($refill->partial_amount ?? 0, 2) }}</strong></div>
+            <div class="detail-row"><span class="label">Paid Amount</span><strong>₱ {{ number_format($refill->paid_amount ?? 0, 2) }}</strong></div>
+            <div class="detail-row"><span class="label">Outstanding Balance</span><strong style="color: #dc2626;">₱ {{ number_format($refill->partial_amount ?? 0, 2) }}</strong></div>
         @endif
 
         <div class="detail-row"><span class="label">Service Type</span><strong>{{ ucfirst(str_replace('_', ' ', $refill->service_type ?? 'walk_in')) }}</strong></div>

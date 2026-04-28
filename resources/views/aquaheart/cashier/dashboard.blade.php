@@ -182,7 +182,7 @@
             data: {
                 labels: @json($dailySalesLabels),
                 datasets: [{
-                    label: 'Daily Revenue (PHP)',
+                    label: 'Daily Revenue (₱)',
                     data: @json($dailySalesData),
                     borderColor: '#3b82f6',
                     backgroundColor: 'rgba(59, 130, 246, 0.08)',
@@ -218,7 +218,7 @@
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return 'PHP ' + value.toLocaleString();
+                                return '₱ ' + value.toLocaleString();
                             },
                             font: { size: 11 },
                             color: '#94a3b8'
@@ -251,7 +251,7 @@
             data: {
                 labels: @json($monthlySalesLabels),
                 datasets: [{
-                    label: 'Monthly Revenue (PHP)',
+                    label: 'Monthly Revenue (₱)',
                     data: @json($monthlySalesData),
                     backgroundColor: 'rgba(59, 130, 246, 0.6)',
                     borderColor: '#3b82f6',
@@ -280,7 +280,7 @@
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return 'PHP ' + value.toLocaleString();
+                                return '₱ ' + value.toLocaleString();
                             },
                             font: { size: 11 },
                             color: '#94a3b8'

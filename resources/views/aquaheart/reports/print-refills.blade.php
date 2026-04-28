@@ -58,7 +58,7 @@
         </div>
         <div class="metric-item">
             <span>Avg. Transaction</span>
-            <div>PHP {{ number_format($refills->count() > 0 ? $refills->sum(fn($refill) => ($refill->quantity ?? 0) * ($refill->unit_price ?? 0)) / $refills->count() : 0, 2) }}</div>
+            <div>₱ {{ number_format($refills->count() > 0 ? $refills->sum(fn($refill) => ($refill->quantity ?? 0) * ($refill->unit_price ?? 0)) / $refills->count() : 0, 2) }}</div>
         </div>
         <div class="metric-item">
             <span>Record Period</span>
@@ -85,7 +85,7 @@
                     <td>{{ $refill->customer->name ?? 'N/A' }}</td>
                     <td>{{ $refill->product->name ?? 'Standard' }}</td>
                     <td>{{ ucfirst(str_replace('_', ' ', $refill->computed_payment_status)) }}</td>
-                    <td class="amt-cell">PHP {{ number_format(($refill->quantity ?? 0) * ($refill->unit_price ?? 0), 2) }}</td>
+                    <td class="amt-cell">₱ {{ number_format(($refill->quantity ?? 0) * ($refill->unit_price ?? 0), 2) }}</td>
                 </tr>
             @endforeach
         </tbody>
@@ -93,7 +93,7 @@
 
     <div class="summary-total">
         <span>Accumulated Gross Total</span>
-        <div>PHP {{ number_format($refills->sum(fn($refill) => ($refill->quantity ?? 0) * ($refill->unit_price ?? 0)), 2) }}</div>
+        <div>₱ {{ number_format($refills->sum(fn($refill) => ($refill->quantity ?? 0) * ($refill->unit_price ?? 0)), 2) }}</div>
     </div>
 
     <footer class="report-footer">

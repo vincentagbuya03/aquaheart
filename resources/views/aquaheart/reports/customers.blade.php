@@ -35,8 +35,8 @@
                         <tr>
                             <td><strong>{{ $stat->name }}</strong></td>
                             <td>{{ $stat->refill_count ?? 0 }}</td>
-                            <td>PHP {{ number_format($stat->total_spent ?? 0, 2) }}</td>
-                            <td>PHP {{ number_format($stat->avg_spent ?? 0, 2) }}</td>
+                            <td>₱ {{ number_format($stat->total_spent ?? 0, 2) }}</td>
+                            <td>₱ {{ number_format($stat->avg_spent ?? 0, 2) }}</td>
                             <td>{{ $stat->first_refill ? \Carbon\Carbon::parse($stat->first_refill)->format('M d, Y') : '-' }}</td>
                             <td>{{ $stat->last_refill ? \Carbon\Carbon::parse($stat->last_refill)->format('M d, Y') : '-' }}</td>
                             <td><a href="{{ route('aquaheart.customers.show', $stat->id) }}" class="view-link">View</a></td>

@@ -63,8 +63,8 @@
 
     <div class="card detail-card">
         <div class="detail-row"><span class="label">Total Refills</span><strong>{{ $totalRefills }}</strong></div>
-        <div class="detail-row"><span class="label">Total Spent</span><strong>PHP {{ number_format($totalSpent, 2) }}</strong></div>
-        <div class="detail-row"><span class="label">Average Ticket</span><strong>PHP {{ number_format($averageTicket, 2) }}</strong></div>
+        <div class="detail-row"><span class="label">Total Spent</span><strong>₱ {{ number_format($totalSpent, 2) }}</strong></div>
+        <div class="detail-row"><span class="label">Average Ticket</span><strong>₱ {{ number_format($averageTicket, 2) }}</strong></div>
         <div class="detail-row"><span class="label">Last Refill</span><strong>{{ optional($lastRefill?->refill_date ?? $lastRefill?->created_at)->format('M d, Y') ?: 'No activity yet' }}</strong></div>
     </div>
     
@@ -131,7 +131,7 @@
                             @endphp
                             <span class="payment-badge {{ $statusClass }}">{{ $statusLabel }}</span>
                         </td>
-                        <td>PHP {{ number_format($lineTotal, 2) }}</td>
+                        <td>₱ {{ number_format($lineTotal, 2) }}</td>
                         <td>{{ optional($refill->refill_date)->format('M d, Y') ?? optional($refill->created_at)->format('M d, Y') ?? 'N/A' }}</td>
                     </tr>
                 @endforeach

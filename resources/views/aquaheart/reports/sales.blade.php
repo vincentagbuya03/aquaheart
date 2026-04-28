@@ -23,7 +23,7 @@
             </div>
             <div class="metric-info">
                 <span class="metric-label">TODAY'S REVENUE</span>
-                <div class="metric-value">PHP {{ number_format($todayRevenue, 2) }}</div>
+                <div class="metric-value">₱ {{ number_format($todayRevenue, 2) }}</div>
             </div>
         </div>
         
@@ -94,7 +94,7 @@
                         </div>
                     </td>
                     <td class="quantity-cell">{{ number_format($transaction->quantity, 1) }} Gal</td>
-                    <td class="price-cell">PHP {{ number_format($transaction->quantity * $transaction->unit_price, 2) }}</td>
+                    <td class="price-cell">₱ {{ number_format($transaction->quantity * $transaction->unit_price, 2) }}</td>
                     <td>
                         <span class="status-pill {{ $txnStatus }}">
                             {{ strtoupper($txnStatus) }}

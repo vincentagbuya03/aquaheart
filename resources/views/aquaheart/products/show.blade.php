@@ -16,7 +16,7 @@
     <div class="card detail-card">
         <div class="detail-row">
             <span class="label">Unit Price</span>
-            <strong>PHP {{ number_format($product->price, 2) }}</strong>
+            <strong>₱ {{ number_format($product->price, 2) }}</strong>
         </div>
         <div class="detail-row">
             <span class="label">Stock Quantity</span>

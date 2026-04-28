@@ -66,7 +66,7 @@
                     <th>CUSTOMER DETAILS</th>
                     <th>SERVICE TYPE</th>
                     <th>PAYMENT STATUS</th>
-                    <th>TOTAL AMOUNT</th>
+                    <th>TOTAL AMOUNT (₱)</th>
                     <th class="text-right">ACTIONS</th>
                 </tr>
             </thead>
@@ -127,18 +127,18 @@
                     <td>
                         <div class="amount-cell">
                             <div class="total-row">
-                                <span class="currency">PHP</span>
+                                <span class="currency">₱</span>
                                 <span class="value">{{ number_format($refill->total_amount ?? ($refill->quantity * $refill->unit_price), 2) }}</span>
                             </div>
                             
                             @if($isPartial)
                                 <div class="financial-breakdown">
                                     <div class="breakdown-item paid">
-                                        <span class="label">Paid:</span>
+                                        <span class="label">Paid (₱):</span>
                                         <span class="amt">₱{{ number_format($paid, 2) }}</span>
                                     </div>
                                     <div class="breakdown-item balance">
-                                        <span class="label">Bal:</span>
+                                        <span class="label">Bal (₱):</span>
                                         <span class="amt">₱{{ number_format($balance, 2) }}</span>
                                     </div>
                                     <div class="progress-mini">

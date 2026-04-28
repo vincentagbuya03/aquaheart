@@ -88,7 +88,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="field-label">Unit Price (PHP)</label>
+                        <label class="field-label">Unit Price (₱)</label>
                         <div class="input-with-icon">
                             <i data-lucide="tag" size="18"></i>
                             <input type="number" id="unit_price" name="unit_price" class="form-input" value="{{ old('unit_price', $editingRefill?->unit_price ?? '') }}" step="0.01" min="0" required>
@@ -99,7 +99,7 @@
                     <div class="form-group">
                         <label class="field-label">Computed Total</label>
                         <div class="computed-total-box">
-                            <span class="currency">PHP</span>
+                            <span class="currency">₱</span>
                             <input type="text" id="computed_total" class="total-display" value="0.00" readonly>
                         </div>
                     </div>
@@ -124,7 +124,7 @@
 
                     <!-- Partial Payment Fields - Show only when partial is selected -->
                     <div class="form-group partial-payment-field" id="paid_amount_field" style="display: none;">
-                        <label class="field-label">Amount Already Paid (PHP)</label>
+                        <label class="field-label">Amount Already Paid (₱)</label>
                         <div class="input-with-icon">
                             <i data-lucide="check-check" size="18"></i>
                             <input type="number" id="paid_amount" name="paid_amount" class="form-input" step="0.01" min="0" value="{{ old('paid_amount', $editingRefill?->paid_amount ?? '') }}" placeholder="Enter paid amount">
@@ -134,7 +134,7 @@
 
                     <div class="form-group partial-payment-field" id="partial_amount_field" style="display: none;">
                         <label class="field-label">
-                            Amount Still Owed (PHP)
+                            Amount Still Owed (₱)
                             <span class="auto-calc-badge">Auto-calculated</span>
                         </label>
                         <div class="input-with-icon">
