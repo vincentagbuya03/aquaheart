@@ -2,15 +2,15 @@
 
 @section('title', 'Cashier Dashboard')
 @section('page_title', 'AquaHeart POS')
-@section('page_subtitle', 'Quick access to refills, customer lookups, and recent sales.')
+@section('page_subtitle', 'Seamless transaction management & business insights.')
 
 @section('page_actions')
-<div style="display: flex; gap: 12px;">
-    <a href="{{ route('aquaheart.refills.create') }}" class="btn-primary">
-        <i data-lucide="plus" size="18"></i>
-        New Transaction
+<div class="header-actions">
+    <a href="{{ route('aquaheart.refills.create') }}" class="btn-action-premium">
+        <div class="btn-icon-wrapper"><i data-lucide="plus"></i></div>
+        <span>New Transaction</span>
     </a>
-    <a href="{{ route('aquaheart.customers.index') }}" class="btn-primary" style="background: white; color: var(--primary); border: 1px solid var(--border);">
+    <a href="{{ route('aquaheart.customers.index') }}" class="btn-action-outline">
         <i data-lucide="users" size="18"></i>
         Find Customer
     </a>
@@ -22,159 +22,186 @@
     $activeCustomers = \App\Models\Customer::count();
 @endphp
 
-<div class="stats-row">
-    <div class="card stat-card pos-primary">
-        <div class="stat-top">
-            <span class="stat-label">Shift Transactions</span>
-            <div class="stat-icon"><i data-lucide="shopping-cart"></i></div>
+<div class="stats-container">
+    <div class="premium-stat-card aqua">
+        <div class="stat-inner">
+            <div class="stat-info">
+                <span class="stat-tag">Today</span>
+                <h3 class="stat-value">{{ number_format($todayTransactions) }}</h3>
+                <p class="stat-desc">Shift Transactions</p>
+            </div>
+            <div class="stat-visual">
+                <div class="stat-icon-blob"><i data-lucide="shopping-bag"></i></div>
+            </div>
         </div>
-        <div class="stat-value">{{ number_format($todayTransactions) }}</div>
-        <div class="stat-footer">Items processed today</div>
+        <div class="stat-progress">
+            <div class="progress-track"><div class="progress-fill" style="width: 65%"></div></div>
+        </div>
     </div>
-    <div class="card stat-card pos-success">
-        <div class="stat-top">
-            <span class="stat-label">Shift Revenue</span>
-            <div class="stat-icon"><i data-lucide="banknote"></i></div>
+
+    <div class="premium-stat-card emerald">
+        <div class="stat-inner">
+            <div class="stat-info">
+                <span class="stat-tag">Revenue</span>
+                <h3 class="stat-value">₱{{ number_format($todayRevenue, 2) }}</h3>
+                <p class="stat-desc">Daily Collections</p>
+            </div>
+            <div class="stat-visual">
+                <div class="stat-icon-blob"><i data-lucide="banknote"></i></div>
+            </div>
         </div>
-        <div class="stat-value">₱{{ number_format($todayRevenue, 2) }}</div>
-        <div class="stat-footer">Gross collections today</div>
+        <div class="stat-progress">
+            <div class="progress-track"><div class="progress-fill" style="width: 80%"></div></div>
+        </div>
     </div>
-    <div class="card stat-card pos-accent">
-        <div class="stat-top">
-            <span class="stat-label">Total Performance</span>
-            <div class="stat-icon"><i data-lucide="award"></i></div>
+
+    <div class="premium-stat-card indigo">
+        <div class="stat-inner">
+            <div class="stat-info">
+                <span class="stat-tag">Overall</span>
+                <h3 class="stat-value">₱{{ number_format($totalRevenue, 2) }}</h3>
+                <p class="stat-desc">Career Sales</p>
+            </div>
+            <div class="stat-visual">
+                <div class="stat-icon-blob"><i data-lucide="award"></i></div>
+            </div>
         </div>
-        <div class="stat-value">₱{{ number_format($totalRevenue, 2) }}</div>
-        <div class="stat-footer">Career total sales generated</div>
+        <div class="stat-progress">
+            <div class="progress-track"><div class="progress-fill" style="width: 45%"></div></div>
+        </div>
     </div>
 </div>
 
-<div class="dashboard-main-grid">
-    <div class="main-content-area">
-        <div class="card logs-card">
-            <div class="card-header-flex">
-                <div>
-                    <h3>Your Recent Transactions</h3>
-                    <p>Last 5 sales you processed</p>
+<div class="dashboard-layout-grid">
+    <div class="dashboard-left-col">
+        <div class="glass-card transactions-card">
+            <div class="card-top-flex">
+                <div class="card-heading">
+                    <h3>Recent Stream</h3>
+                    <p>Live activity of your processed sales</p>
                 </div>
-                <a href="{{ route('aquaheart.refills.index') }}" class="btn-link">View All <i data-lucide="arrow-right" size="14"></i></a>
+                <a href="{{ route('aquaheart.refills.index') }}" class="view-all-link">History <i data-lucide="chevron-right"></i></a>
             </div>
             
-            <div class="pos-table-container">
-                <table class="pos-table">
-                    <thead>
-                        <tr>
-                            <th>Receipt</th>
-                            <th>Customer</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentTransactions as $refill)
-                            <tr onclick="window.location='{{ route('aquaheart.refills.show', $refill) }}'" style="cursor: pointer;">
-                                <td class="receipt-cell">
-                                    <span class="receipt-no">{{ $refill->receipt_number }}</span>
-                                    <span class="item-name">{{ $refill->product->name ?? 'Service' }}</span>
-                                </td>
-                                <td class="customer-cell">
-                                    <div class="cust-avatar">{{ substr($refill->customer->name ?? 'W', 0, 1) }}</div>
-                                    <span>{{ $refill->customer->name ?? 'Walk-in' }}</span>
-                                </td>
-                                <td class="amount-cell">₱{{ number_format(($refill->quantity ?? 0) * ($refill->unit_price ?? 0), 2) }}</td>
-                                <td>
-                                    @php $status = $refill->payment_status ?? 'paid'; @endphp
-                                    <span class="status-dot {{ $status }}"></span>
-                                    <span class="status-text">{{ ucfirst($status) }}</span>
-                                </td>
-                                <td class="time-cell">{{ $refill->created_at->diffForHumans() }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="empty-row">No transactions recorded in this shift yet.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="transaction-stream">
+                @forelse($recentTransactions as $refill)
+                    <div class="stream-item" onclick="window.location='{{ route('aquaheart.refills.show', $refill) }}'">
+                        <div class="stream-icon-box">
+                            <i data-lucide="arrow-up-right"></i>
+                        </div>
+                        <div class="stream-content">
+                            <div class="stream-main-info">
+                                <span class="stream-title">{{ $refill->customer->name ?? 'Walk-in Customer' }}</span>
+                                <span class="stream-amount">₱{{ number_format(($refill->quantity ?? 0) * ($refill->unit_price ?? 0), 2) }}</span>
+                            </div>
+                            <div class="stream-sub-info">
+                                <span class="stream-meta"><i data-lucide="hash"></i> {{ $refill->receipt_number }}</span>
+                                <span class="stream-meta"><i data-lucide="package"></i> {{ $refill->product->name ?? 'Refill' }}</span>
+                                <span class="stream-time">{{ $refill->created_at->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                        <div class="stream-status">
+                            @php $status = $refill->payment_status ?? 'paid'; @endphp
+                            <span class="badge-premium {{ $status }}">{{ ucfirst($status) }}</span>
+                        </div>
+                    </div>
+                @empty
+                    <div class="empty-state-simple">
+                        <i data-lucide="inbox"></i>
+                        <p>No transactions yet today</p>
+                    </div>
+                @endforelse
             </div>
         </div>
 
-        <div class="charts-grid">
-            <div class="card chart-card">
-                <div class="card-header">
-                    <h3>Shift Productivity</h3>
-                    <p>Revenue across last 30 days</p>
+        <div class="charts-row">
+            <div class="glass-card chart-item">
+                <div class="card-heading">
+                    <h3>Performance Dynamics</h3>
+                    <p>30-day revenue trend</p>
                 </div>
-                <div class="chart-container">
+                <div class="chart-wrapper">
                     <canvas id="salesChart"></canvas>
                 </div>
             </div>
-            <div class="card chart-card">
-                <div class="card-header">
-                    <h3>Performance History</h3>
+            <div class="glass-card chart-item">
+                <div class="card-heading">
+                    <h3>Volume Analysis</h3>
                     <p>Monthly sales breakdown</p>
                 </div>
-                <div class="chart-container">
+                <div class="chart-wrapper">
                     <canvas id="monthlySalesChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <aside class="dashboard-sidebar">
-        <div class="card inventory-summary-card">
-            <div class="card-header">
-                <h3>Inventory Pulse</h3>
-                <p>Monitor stock availability</p>
+    <aside class="dashboard-right-col">
+        <div class="glass-card command-panel">
+            <div class="card-heading">
+                <h3>Command Center</h3>
+                <p>One-tap POS actions</p>
             </div>
-            <ul class="inventory-list">
-                @foreach(\App\Models\Product::where('is_active', true)->orderBy('stock_quantity')->take(6)->get() as $product)
-                <li class="inventory-item">
-                    <div class="inv-info">
-                        <span class="inv-name">{{ $product->name }}</span>
-                        <div class="inv-progress-bg">
-                            @php $perc = min(100, ($product->stock_quantity / ($product->reorder_level * 3 ?: 100)) * 100); @endphp
-                            <div class="inv-progress-bar {{ $product->stock_quantity <= $product->reorder_level ? 'critical' : '' }}" style="width: {{ $perc }}%"></div>
-                        </div>
-                    </div>
-                    <span class="inv-count {{ $product->stock_quantity <= $product->reorder_level ? 'low' : '' }}">
-                        {{ $product->stock_quantity }}
-                    </span>
-                </li>
-                @endforeach
-            </ul>
-        </div>
-
-        <div class="card quick-actions-panel">
-            <h3>POS shortcuts</h3>
-            <div class="shortcut-grid">
-                <a href="{{ route('aquaheart.refills.create') }}" class="shortcut-btn">
-                    <div class="shortcut-icon"><i data-lucide="plus"></i></div>
+            <div class="command-grid">
+                <a href="{{ route('aquaheart.refills.create') }}" class="command-btn">
+                    <div class="cmd-icon aqua"><i data-lucide="plus-square"></i></div>
                     <span>New Sale</span>
                 </a>
-                <a href="{{ route('aquaheart.customers.index') }}" class="shortcut-btn">
-                    <div class="shortcut-icon"><i data-lucide="users"></i></div>
-                    <span>Find User</span>
+                <a href="{{ route('aquaheart.customers.index') }}" class="command-btn">
+                    <div class="cmd-icon emerald"><i data-lucide="user-plus"></i></div>
+                    <span>Customers</span>
                 </a>
-                <a href="{{ route('aquaheart.refills.index') }}" class="shortcut-btn">
-                    <div class="shortcut-icon"><i data-lucide="receipt"></i></div>
-                    <span>History</span>
+                <a href="{{ route('aquaheart.refills.index') }}" class="command-btn">
+                    <div class="cmd-icon indigo"><i data-lucide="file-text"></i></div>
+                    <span>Reports</span>
                 </a>
-                <a href="{{ route('aquaheart.support') }}" class="shortcut-btn">
-                    <div class="shortcut-icon"><i data-lucide="help-circle"></i></div>
+                <a href="{{ route('aquaheart.support') }}" class="command-btn">
+                    <div class="cmd-icon amber"><i data-lucide="life-buoy"></i></div>
                     <span>Support</span>
                 </a>
             </div>
         </div>
+
+        <div class="glass-card inventory-pulse">
+            <div class="card-heading">
+                <h3>Inventory Pulse</h3>
+                <p>Critical stock monitoring</p>
+            </div>
+            <div class="pulse-list">
+                @foreach(\App\Models\Product::where('is_active', true)->orderBy('stock_quantity')->take(5)->get() as $product)
+                <div class="pulse-item">
+                    <div class="pulse-info">
+                        <span class="pulse-name">{{ $product->name }}</span>
+                        <span class="pulse-stock {{ $product->stock_quantity <= $product->reorder_level ? 'low' : '' }}">
+                            {{ $product->stock_quantity }} units left
+                        </span>
+                    </div>
+                    <div class="pulse-progress-container">
+                        @php $perc = min(100, ($product->stock_quantity / ($product->reorder_level * 3 ?: 100)) * 100); @endphp
+                        <div class="pulse-progress-bar {{ $product->stock_quantity <= $product->reorder_level ? 'critical' : '' }}" style="width: {{ $perc }}%"></div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="upgrade-card-simple">
+            <div class="upgrade-content">
+                <h4>System Update</h4>
+                <p>New version v2.4 is live with improved analytics.</p>
+            </div>
+            <i data-lucide="sparkles"></i>
+        </div>
     </aside>
 </div>
-
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    // Daily Sales Chart (Last 30 days)
+    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+    Chart.defaults.color = "#94a3b8";
+
+    // Daily Sales Chart
     const dailySalesCtx = document.getElementById('salesChart');
     if (dailySalesCtx) {
         new Chart(dailySalesCtx, {
@@ -182,68 +209,41 @@
             data: {
                 labels: @json($dailySalesLabels),
                 datasets: [{
-                    label: 'Daily Revenue (₱)',
+                    label: 'Revenue',
                     data: @json($dailySalesData),
                     borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.08)',
-                    borderWidth: 2,
+                    backgroundColor: (context) => {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) return null;
+                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                        gradient.addColorStop(0, 'rgba(59, 130, 246, 0)');
+                        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+                        return gradient;
+                    },
+                    borderWidth: 3,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#3b82f6',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
+                    pointRadius: 0,
                     pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#3b82f6',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 3,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            font: { size: 12, weight: '600' },
-                            color: '#64748b',
-                            usePointStyle: true,
-                            padding: 16,
-                        }
-                    },
-                    filler: {
-                        propagate: true
-                    }
-                },
+                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '₱ ' + value.toLocaleString();
-                            },
-                            font: { size: 11 },
-                            color: '#94a3b8'
-                        },
-                        grid: {
-                            color: '#e2e8f0',
-                            drawBorder: false,
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: { size: 11 },
-                            color: '#94a3b8'
-                        },
-                        grid: {
-                            display: false,
-                            drawBorder: false,
-                        }
-                    }
+                    y: { beginAtZero: true, grid: { color: 'rgba(226, 232, 240, 0.5)', drawBorder: false }, ticks: { callback: v => '₱' + v.toLocaleString() } },
+                    x: { grid: { display: false } }
                 }
             }
         });
     }
 
-    // Monthly Sales Chart (Last 12 months)
+    // Monthly Sales Chart
     const monthlySalesCtx = document.getElementById('monthlySalesChart');
     if (monthlySalesCtx) {
         new Chart(monthlySalesCtx, {
@@ -251,55 +251,20 @@
             data: {
                 labels: @json($monthlySalesLabels),
                 datasets: [{
-                    label: 'Monthly Revenue (₱)',
+                    label: 'Revenue',
                     data: @json($monthlySalesData),
-                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
-                    borderColor: '#3b82f6',
-                    borderWidth: 1,
-                    borderRadius: 6,
-                    hoverBackgroundColor: 'rgba(59, 130, 246, 0.8)',
+                    backgroundColor: '#10b981',
+                    borderRadius: 8,
+                    maxBarThickness: 32,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                indexAxis: undefined,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            font: { size: 12, weight: '600' },
-                            color: '#64748b',
-                            usePointStyle: true,
-                            padding: 16,
-                        }
-                    }
-                },
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '₱ ' + value.toLocaleString();
-                            },
-                            font: { size: 11 },
-                            color: '#94a3b8'
-                        },
-                        grid: {
-                            color: '#e2e8f0',
-                            drawBorder: false,
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: { size: 11 },
-                            color: '#94a3b8'
-                        },
-                        grid: {
-                            display: false,
-                            drawBorder: false,
-                        }
-                    }
+                    y: { beginAtZero: true, grid: { color: 'rgba(226, 232, 240, 0.5)', drawBorder: false }, ticks: { callback: v => '₱' + v.toLocaleString() } },
+                    x: { grid: { display: false } }
                 }
             }
         });
@@ -309,78 +274,113 @@
 
 @push('styles')
 <style>
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 24px; }
-    .stat-card { padding: 24px; border-radius: 20px; color: white; display: flex; flex-direction: column; gap: 8px; border: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-    .stat-card.pos-primary { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
-    .stat-card.pos-success { background: linear-gradient(135deg, #10b981 0%, #047857 100%); }
-    .stat-card.pos-accent { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
-    .stat-top { display: flex; justify-content: space-between; align-items: flex-start; }
-    .stat-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; opacity: 0.9; letter-spacing: 0.5px; }
-    .stat-icon { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-    .stat-value { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
-    .stat-footer { font-size: 0.75rem; opacity: 0.8; font-weight: 600; }
+    /* Header Actions */
+    .header-actions { display: flex; gap: 16px; align-items: center; }
+    .btn-action-premium { background: var(--primary); color: white; text-decoration: none; padding: 6px 20px 6px 6px; border-radius: 100px; display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.9rem; transition: var(--transition); box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.15); }
+    .btn-action-premium:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.2); }
+    .btn-icon-wrapper { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; }
+    .btn-action-outline { border: 1px solid var(--border); color: var(--text-main); text-decoration: none; padding: 10px 20px; border-radius: 100px; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 0.9rem; transition: var(--transition); background: white; }
+    .btn-action-outline:hover { background: var(--bg); border-color: var(--text-muted); }
 
-    .dashboard-main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
-    .main-content-area { display: flex; flex-direction: column; gap: 24px; }
+    /* Stats Grid */
+    .stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+    .premium-stat-card { background: white; border-radius: 24px; padding: 24px; position: relative; overflow: hidden; border: 1px solid var(--border); transition: var(--transition); }
+    .premium-stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); }
+    .stat-inner { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 2; }
+    .stat-tag { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
+    .stat-value { font-size: 1.75rem; font-weight: 800; color: var(--primary); margin: 4px 0; letter-spacing: -0.5px; }
+    .stat-desc { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+    .stat-icon-blob { width: 56px; height: 56px; border-radius: 18px; display: flex; align-items: center; justify-content: center; position: relative; }
+    .stat-icon-blob i { width: 28px; height: 28px; stroke-width: 2.5; }
     
-    .card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .card-header-flex h3 { font-size: 1.1rem; font-weight: 800; color: var(--primary); }
-    .card-header-flex p { font-size: 0.85rem; color: var(--text-muted); }
-    .btn-link { font-size: 0.8rem; font-weight: 700; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 6px; }
-
-    .pos-table-container { overflow-x: auto; }
-    .pos-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-    .pos-table th { text-align: left; padding: 12px; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; }
-    .pos-table td { padding: 16px 12px; background: #f8fafc; font-size: 0.85rem; transition: var(--transition); }
-    .pos-table tr td:first-child { border-radius: 12px 0 0 12px; }
-    .pos-table tr td:last-child { border-radius: 0 12px 12px 0; }
-    .pos-table tr:hover td { background: #f1f5f9; }
-
-    .receipt-cell { display: flex; flex-direction: column; gap: 4px; }
-    .receipt-no { font-weight: 800; color: var(--primary); font-size: 0.85rem; }
-    .item-name { font-size: 0.75rem; color: var(--text-muted); }
-
-    .customer-cell { display: flex; align-items: center; gap: 10px; font-weight: 700; }
-    .cust-avatar { width: 28px; height: 28px; border-radius: 8px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: var(--primary); }
+    .aqua .stat-icon-blob { background: #e0f2fe; color: #0ea5e9; }
+    .emerald .stat-icon-blob { background: #dcfce7; color: #10b981; }
+    .indigo .stat-icon-blob { background: #e0e7ff; color: #6366f1; }
     
-    .amount-cell { font-weight: 800; color: var(--primary); }
-    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
-    .status-dot.paid { background: #10b981; box-shadow: 0 0 8px #10b981; }
-    .status-dot.unpaid { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
-    .status-dot.partial { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-    .status-text { font-size: 0.75rem; font-weight: 700; color: var(--text-main); }
-    .time-cell { font-size: 0.75rem; color: var(--text-muted); text-align: right; }
+    .stat-progress { margin-top: 20px; }
+    .progress-track { height: 6px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 10px; }
+    .aqua .progress-fill { background: #0ea5e9; }
+    .emerald .progress-fill { background: #10b981; }
+    .indigo .progress-fill { background: #6366f1; }
 
-    .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
-    .chart-container { position: relative; height: 260px; margin-top: 16px; }
+    /* Layout */
+    .dashboard-layout-grid { display: grid; grid-template-columns: 1fr 340px; gap: 32px; }
+    .dashboard-left-col { display: flex; flex-direction: column; gap: 32px; }
+    .glass-card { background: white; border: 1px solid var(--border); border-radius: 24px; padding: 28px; }
+    
+    .card-top-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+    .card-heading h3 { font-size: 1.15rem; font-weight: 800; color: var(--primary); letter-spacing: -0.3px; }
+    .card-heading p { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+    .view-all-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; font-weight: 800; display: flex; align-items: center; gap: 4px; }
 
-    .inventory-list { list-style: none; display: flex; flex-direction: column; gap: 18px; margin-top: 20px; }
-    .inventory-item { display: flex; align-items: center; gap: 12px; }
-    .inv-info { flex: 1; }
-    .inv-name { font-size: 0.8rem; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 6px; }
-    .inv-progress-bg { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
-    .inv-progress-bar { height: 100%; background: #3b82f6; border-radius: 3px; }
-    .inv-progress-bar.critical { background: #ef4444; }
-    .inv-count { min-width: 36px; text-align: right; font-size: 0.85rem; font-weight: 800; color: var(--primary); }
-    .inv-count.low { color: #ef4444; }
+    /* Transaction Stream */
+    .transaction-stream { display: flex; flex-direction: column; gap: 12px; }
+    .stream-item { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 18px; background: #f8fafc; cursor: pointer; transition: var(--transition); border: 1px solid transparent; }
+    .stream-item:hover { background: white; border-color: var(--accent); transform: scale(1.01); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08); }
+    .stream-icon-box { width: 44px; height: 44px; border-radius: 12px; background: white; display: flex; align-items: center; justify-content: center; color: var(--text-muted); border: 1px solid #e2e8f0; }
+    .stream-content { flex: 1; }
+    .stream-main-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .stream-title { font-weight: 800; color: var(--primary); font-size: 0.95rem; }
+    .stream-amount { font-weight: 900; color: var(--primary); font-size: 1rem; }
+    .stream-sub-info { display: flex; align-items: center; gap: 16px; }
+    .stream-meta { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; font-weight: 600; }
+    .stream-time { font-size: 0.75rem; color: var(--text-muted); margin-left: auto; font-weight: 600; }
+    
+    .badge-premium { padding: 4px 12px; border-radius: 100px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-premium.paid { background: #dcfce7; color: #166534; }
+    .badge-premium.unpaid { background: #fee2e2; color: #991b1b; }
+    .badge-premium.partial { background: #fef3c7; color: #92400e; }
 
-    .shortcut-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
-    .shortcut-btn { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; text-decoration: none; transition: var(--transition); }
-    .shortcut-btn:hover { background: white; border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .shortcut-icon { width: 40px; height: 40px; border-radius: 12px; background: white; display: flex; align-items: center; justify-content: center; color: var(--accent); border: 1px solid #e2e8f0; }
-    .shortcut-btn span { font-size: 0.75rem; font-weight: 700; color: var(--text-main); }
+    /* Charts */
+    .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .chart-wrapper { height: 260px; margin-top: 20px; }
 
-    @media (max-width: 1200px) {
-        .dashboard-main-grid { grid-template-columns: 1fr; }
-        .dashboard-sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    /* Command Panel */
+    .command-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+    .command-btn { text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 20px; background: #f8fafc; border-radius: 20px; transition: var(--transition); border: 1px solid transparent; }
+    .command-btn:hover { background: white; border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0,0,0,0.05); }
+    .cmd-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+    .cmd-icon i { width: 24px; height: 24px; stroke-width: 2.5; }
+    .cmd-icon.aqua { background: #e0f2fe; color: #0ea5e9; }
+    .cmd-icon.emerald { background: #dcfce7; color: #10b981; }
+    .cmd-icon.indigo { background: #e0e7ff; color: #6366f1; }
+    .cmd-icon.amber { background: #fef3c7; color: #f59e0b; }
+    .command-btn span { font-size: 0.8rem; font-weight: 800; color: var(--primary); }
+
+    /* Inventory Pulse */
+    .pulse-list { display: flex; flex-direction: column; gap: 20px; margin-top: 24px; }
+    .pulse-item { display: flex; flex-direction: column; gap: 8px; }
+    .pulse-info { display: flex; justify-content: space-between; align-items: flex-end; }
+    .pulse-name { font-size: 0.85rem; font-weight: 700; color: var(--primary); }
+    .pulse-stock { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); }
+    .pulse-stock.low { color: #ef4444; animation: blink 2s infinite; }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    
+    .pulse-progress-container { height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; }
+    .pulse-progress-bar { height: 100%; background: var(--accent); border-radius: 4px; }
+    .pulse-progress-bar.critical { background: #ef4444; }
+
+    /* Upgrade Card */
+    .upgrade-card-simple { margin-top: 32px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 24px; padding: 24px; color: white; display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden; }
+    .upgrade-card-simple::after { content: ''; position: absolute; top: -50%; right: -20%; width: 120px; height: 120px; background: rgba(59, 130, 246, 0.2); filter: blur(40px); border-radius: 50%; }
+    .upgrade-content h4 { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
+    .upgrade-content p { font-size: 0.75rem; opacity: 0.7; font-weight: 600; line-height: 1.4; }
+    .upgrade-card-simple i { color: #3b82f6; width: 32px; height: 32px; flex-shrink: 0; }
+
+    @media (max-width: 1280px) {
+        .dashboard-layout-grid { grid-template-columns: 1fr; }
+        .dashboard-right-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .upgrade-card-simple { grid-column: span 2; }
     }
-
+    @media (max-width: 1024px) {
+        .stats-container { grid-template-columns: 1fr 1fr; }
+    }
     @media (max-width: 768px) {
-        .stats-row { grid-template-columns: 1fr; }
-        .charts-grid { grid-template-columns: 1fr; }
-        .dashboard-sidebar { grid-template-columns: 1fr; }
+        .stats-container { grid-template-columns: 1fr; }
+        .dashboard-right-col { grid-template-columns: 1fr; }
+        .charts-row { grid-template-columns: 1fr; }
     }
 </style>
 @endpush
-
 @endsection
